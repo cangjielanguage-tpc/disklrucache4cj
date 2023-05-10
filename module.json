@@ -1,0 +1,21 @@
+{
+    "cjc_version": "0.38.2",
+    "organization": "cangjie",
+    "name": "disklrucache",
+    "description": "nothing here",
+    "version": "0.0.1",
+    "requires": {
+      "charset": {
+        "organization": "pllab",
+        "version": "1.0.0",
+        "path": "./charset"
+      }
+    },
+    "package_requires": {
+      "path_option": [],
+      "package_option": {}
+    },
+    "foreign_requires": {},
+    "output_type": "dynamic",
+    "command_option": ""
+}

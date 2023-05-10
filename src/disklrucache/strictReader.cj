@@ -1,0 +1,103 @@
+package disklrucache
+
+from std import io.*
+from std import fs.*
+from std import sync.*
+from std import collection.*
+from charset import charset.*
+from charset import  charset.encoding.*
+
+class StrictLineReader {
+
+    private static let CR = UInt8(UInt32('\r'))
+    private static let LF = UInt8(UInt32('\n'))
+
+    private var input: InputStream
+
+    private var charset: Charset
+
+    private var buf: Array<Byte>
+    private var pos: Int64 = 0
+    private var end: Int64 = 0
+    
+    private let lock: Monitor = Monitor()
+
+    public init(input: InputStream, charset: Charset) {
+        this(input, 8192, charset)
+    }
+
+    public init(input: InputStream, capacity: Int64, charset: Charset) {
+        if (input.length == 0) {
+            throw Exception("inputStream is null")
+        }
+        if (capacity <  0) {
+            throw Exception("capacity <= 0")
+        }
+        if (!(charset.nameEquals("ISO_8859_2"))) {
+            throw IllegalArgumentException("Unsupported encoding")
+        }
+        this.input = input
+        this.charset = charset
+        this.buf = Array<Byte>(capacity, item:0)
+    }
+
+    public func readLine(): String {
+        synchronized (lock) {
+            if (buf.isEmpty()) {
+                throw Exception("LineReader is closed")
+            }
+
+            if (pos >= end) {
+                fillBuf()
+            }
+
+            for (i in pos..end) {
+                if (buf[i] == LF) {
+                    var lineEnd = -1
+                    if (i != pos && buf[i - 1] == CR) {
+                        lineEnd = i-1
+                    }else {
+                        lineEnd = i
+                    }
+                    let res = buf.slice(pos,lineEnd -pos).toString()
+                    pos = i + 1
+                    return res
+                }
+            }
+
+            var out: ByteArrayStream = ByteArrayStream(end - pos + 80)
+
+            while (true) {
+                out.write(buf.slice(pos,end -pos))
+                end = -1
+                fillBuf()
+                for (i in pos..end) {
+                    if (buf[i] == LF) {
+                        if (i != pos) {
+                            out.write(buf.slice(pos,i -pos))
+                        }
+                        pos = i+1
+                        var bytes: Array<Byte> = out.bytes()
+                        return bytes.toString()
+                    }
+                }
+            }
+            return ""
+        }
+        
+    }
+
+    public func hasUnterminatedLine(): Bool {
+        return (end == -1)
+    }
+
+    private func fillBuf(): Unit {
+        let resu = this.input.read(buf)
+        if (resu == 0) {
+            throw Exception()
+        }
+        this.pos = 0
+        this.end = resu
+    }
+}
+

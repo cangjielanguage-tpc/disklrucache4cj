@@ -1,11 +1,11 @@
 [
     {
-        "Name": " xxx",
+        "Name": " disklrucache",
         "License": " Apache License ",
         "License File": " LICENSE ",
         "Version Number": " v2.0 ",
-        "Owner": "xxx"
-        "Upstream URL": "https://github.com/xxx",
-        "Description": " xxx."
+        "Owner": ""
+        "Upstream URL": "https://github.com/JakeWharton/DiskLruCache",
+        "Description": " It is a storage management tool for managing hard disk content, using the lru algorithm"
     }
 ]
