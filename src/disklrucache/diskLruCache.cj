@@ -5,6 +5,8 @@ from std import fs.*
 from std import collection.*
 from std import unicode.*
 from std import os.posix.*
+from std import convert.*
+from std import regex.*
 
 public class DiskLruCache {
 
@@ -15,6 +17,682 @@ public class DiskLruCache {
     static let VERSION_1: String = "1"
     static let ANY_SEQUENCE_NUMBER: Int64 = -1
 
-    
+    static let LEGAL_KEY_PATTERN: Regex = Regex("[a-z0-9_-]{1,64}")
+    private static let CLEAN: String = "CLEAN"
+    private static let DIRTY: String = "DIRTY"
+    private static let REMOVE: String = "REMOVE"
+    private static let READ: String = "READ"
+
+
+    protected var directory: Directory
+    private var journalFile: File
+    private var journalFileTmp: File
+    private var journalFileBackup: File
+    private var appVersion: Int64
+    private var maxSize: Int64
+    protected var valueCount: Int64
+    private var size: Int64 = 0
+    private var journalWriter: Option<Sink> = Option<Sink>.None
+    private var lruEntries: HashMap<String, Entry> = HashMap<String, Entry>()
+    private var redundantOpCount: Int64 = 0
+    private var nextSequenceNumber: Int64 = 0
+
+    let lock: Monitor = Monitor()
+
+    private init(directory: Directory, appVersion: Int64, valueCount: Int64, maxSize: Int64) {
+        this.directory = directory
+        this.appVersion = appVersion
+        this.journalFile = File(directory.info.path.join(JOURNAL_FILE), Open(true, true))
+        this.journalFileTmp = File(directory.info.path.join(JOURNAL_FILE_TEMP), Open(true, true))
+        this.journalFileBackup = File(directory.info.path.join(JOURNAL_FILE_BACKUP), Open(true, true))
+        this.valueCount = valueCount
+        this.maxSize = maxSize
+
+    }
+
+    public static func open(directory: Directory, appVersion: Int64, valueCount: Int64, maxSize: Int64): DiskLruCache {
+        if (maxSize <= 0) {
+            throw IllegalArgumentException("maxSize <= 0")
+        }
+        if (valueCount <= 0) {
+            throw IllegalArgumentException("valueCount <= 0")
+        }
+
+        // If a bkp file exists, use it instead.
+        var backupFile = File(directory.info.path.join(JOURNAL_FILE_BACKUP), Open(true, true))
+        if (File.exists(backupFile.info.path.toString())) {
+
+            var journalFile = File(directory.info.path.join(JOURNAL_FILE_TEMP), Open(true, true))
+            // If journal file also exists just delete backup file.
+            if (File.exists(journalFile.info.path.toString())) {
+                File.delete(backupFile.info.path.toString())
+            } else {
+                renameTo(backupFile, journalFile, false)
+            }
+        }
+
+        // Prefer to pick up where we left off.
+        var cache: DiskLruCache = DiskLruCache(directory, appVersion, valueCount, maxSize)
+        if (File.exists(cache.journalFile.info.path.toString())) {
+            try {
+                cache.readJournal()
+                cache.processJournal()  
+                cache.journalWriter = ReallBufferSink(FileSink(File(cache.journalFile.info.path.toString(), Append)))
+                return cache
+            } catch (e: Exception) {
+                println("DiskLruCache ${directory.info.path.toString()} is corrupt: ${e.toString()}, removing")
+                cache.delete()
+            }
+        }
+
+        cache = DiskLruCache(directory, appVersion, valueCount, maxSize)
+        cache.rebuildJournal()
+        return cache
+    }
+
+    public func delete(): Unit {
+        close()
+        Util.deleteContents(directory)
+    }
+
+    public func close(): Unit{
+        match (journalWriter) {
+            case None =>
+                return
+            case Some(s) =>
+                ()
+        }
+
+        for (entry in lruEntries.values()) {
+            match (entry.currentEditor) {
+                case None =>
+                    ()
+                case Some(s) =>
+                    s.abort()
+            }
+        }
+        trimToSize()
+        journalWriter.getOrThrow().close()
+        journalWriter = None
+  
+    }
+
+    private func trimToSize(): Unit {
+        while (size > maxSize) {
+            let toEvict: String = lruEntries.keys().iterator().next().getOrThrow()
+            remove(toEvict)
+        }
+    }
+
+    public func remove(key: String): Bool {
+        synchronized (lock) {
+            checkNotClosed()
+            validateKey(key)
+            match (lruEntries.get(key)) {
+                case Some(k) => 
+                    match (k.currentEditor) {
+                        case Some(v) => return false
+                        case None => ()
+                    }
+                    for (i in 0..valueCount) {
+                        let file = k.getCleanFile(i)
+                        deleteIfExists(file)
+                        size -= k.lengths[i]
+                        k.lengths[i] = 0
+                    }
+                    redundantOpCount++
+                    var jw = wirteSink(journalWriter)
+                    jw.write(REMOVE.toUtf8Array())
+                    jw.write(" ".toUtf8Array())
+                    jw.write(key.toUtf8Array())
+                    jw.write("\n".toUtf8Array())
+                    lruEntries.remove(key)
+
+                    if (journalRebuildRequired()) {
+                        cleanUp()
+                    }
+
+                    return true
+                case None => return false
+            }
+        }
+    }
+
+    private func wirteSink(journalWriter: Option<Sink>): Sink {
+        return journalWriter.getOrThrow()
+    }
+
+    private func processJournal(): Unit {
+        deleteIfExists(journalFileTmp)
+        var str = ArrayList<String>()
+        for (key in lruEntries.keys()) {
+            let entry = lruEntries[key]
+            match (entry.currentEditor) {
+                case None =>
+                    for (i in 0..valueCount) {
+                        size += entry.lengths[i]
+                    }
+                case Some(k) =>
+                    entry.currentEditor = None
+                    for (i in 0..valueCount) {
+                        deleteIfExists(entry.getCleanFile(i))
+                        deleteIfExists(entry.getDirtyFile(i))
+                    }
+                    str.append(key)
+            }
+        }
+        lruEntries.removeAll(str)
+    }
+
+    private func rebuildJournal(): Unit {
+        synchronized (lock) {
+            match (journalWriter) {
+                case None =>
+                    ()
+                case Some(s) =>
+                    s.close()
+            }
+            var writer = ReallBufferSink(FileSink(directory.createFile(JOURNAL_FILE_TEMP)))
+
+            try {
+                writer.write(MAGIC.toUtf8Array())
+                writer.write("\n".toUtf8Array())
+                writer.write(VERSION_1.toUtf8Array())
+                writer.write("\n".toUtf8Array())
+                writer.write("${appVersion}".toUtf8Array())
+                writer.write("\n".toUtf8Array())
+                writer.write("${valueCount}".toUtf8Array())
+                writer.write("\n".toUtf8Array())
+                writer.write("\n".toUtf8Array())
+                for (entry in lruEntries.values()) {
+                    match (entry.currentEditor) {
+                        case Some(ce) =>
+                            writer.write((DIRTY+ " ").toUtf8Array())
+                            writer.write(entry.key.toUtf8Array())
+                            writer.write("\n".toUtf8Array())
+                        case None =>
+                            writer.write((CLEAN+ " ").toUtf8Array())
+                            writer.write(entry.key.toUtf8Array())
+                            writer.write(entry.getLengths().toUtf8Array())
+                            writer.write("\n".toUtf8Array())
+                    }
+                }
+            } finally {
+                writer.close()
+            }
+            if (File.exists(journalFile.info.path.toString())) {
+                renameTo(journalFile, journalFileBackup, true);
+            }
+            renameTo(journalFileTmp, journalFile, false);
+            File.delete(journalFileBackup.info.path.toString())
+            journalWriter = ReallBufferSink(FileSink(File(journalFile.info.path.toString(), Append)))
+        }
+    }
+
+    private func readJournal(): Unit {
+        var reader: StrictLineReader =  StrictLineReader(journalFile, Util.US_ASCII)
+
+        try {
+            let magic = reader.readLine()
+            let version = reader.readLine()
+            let appVersionString = reader.readLine()
+            let valueCountString = reader.readLine()
+            let blank = reader.readLine()
+            if (!MAGIC.equals(magic) || !VERSION_1.equals(version) || !("${appVersion}").equals(appVersionString)
+                || !("${valueCount}").equals(valueCountString) || !"".equals(blank)) {
+                
+                throw Exception("unexpected journal header: [${magic}, ${version}, ${valueCountString}, ${blank}]")
+            }
+
+            var lineCount = 0
+
+            while (true) {
+                try {
+                    readJournalLine(reader.readLine())
+                    lineCount++
+                } catch (e: Exception) {
+                    break
+                }
+            }
+            redundantOpCount = lineCount - lruEntries.size
+        } finally {
+            
+        }
+    }
+
+    private func readJournalLine(line: String): Unit {
+        var firstSpace = -1
+        try {
+            firstSpace = line.indexOf(' ').getOrThrow()
+        } catch (e: Exception) {
+            throw Exception("unexpected journal line: ${line}")
+        }
+        let keyBegin = firstSpace + 1
+        var key: String = ""
+        var secondSpace = -1
+        var secondSpaceds: Bool = false
+        try {
+            secondSpace = line.indexOf(' ', keyBegin).getOrThrow()
+        } catch (e: Exception) {
+            secondSpaceds = true
+        }
+        if (secondSpaceds) {
+            key = line.substring(keyBegin)
+            if (firstSpace == REMOVE.size && line.startsWith(REMOVE)) {
+                lruEntries.remove(key)
+                return
+            }
+        } else {
+            key = line.substring(keyBegin, secondSpace)
+        }
+
+        var entry = Entry("",this)
+        try {
+            entry = lruEntries.get(key).getOrThrow()
+        } catch (e: Exception) {
+            entry = Entry(key,this)
+            lruEntries.put(key, entry)
+        }
+
+        if (secondSpace != -1 && firstSpace == CLEAN.size && line.startsWith(CLEAN)) {
+            let parts: Array<String> = line.substring(secondSpace + 1).split(" ")
+            entry.readable = true
+            entry.currentEditor = None
+            entry.setLengths(parts)
+        } else if (secondSpace == -1 && firstSpace == DIRTY.size && line.startsWith(DIRTY)) {
+            entry.currentEditor = Editor(entry,this)
+        } else if (secondSpace == -1 && firstSpace == READ.size && line.startsWith(READ)) {
+          
+        } else {
+            throw Exception("unexpected journal line: ${line}")
+        }
+    }
+
+    private static func deleteIfExists(file: File): Unit {
+        if (File.exists(file.info.path.toString())) {
+            try {
+                let strc = File.delete(file.info.path.toString())
+            }catch (e: Exception){
+                throw Exception("failed to delete ")
+            }  
+            
+        }
+    }
+
+    private static func renameTo(fo: File, to: File, deleteDestination: Bool): Unit {
+        if (deleteDestination) {
+            deleteIfExists(to)
+        }
+        rename(fo.info.path.toString(),to.info.path.toString())
+
+    }
+
+    private func cleanUp(): Unit {
+        synchronized (lock) {
+            match (journalWriter) {
+                case Some(K) => ()
+                case None => return
+            }
+            trimToSize()
+            if (journalRebuildRequired()) {
+                rebuildJournal()
+                redundantOpCount = 0
+            }
+        }
+    }
+
+    private func validateKey(key: String): Unit {
+        let matcher: Option<MatchData> = LEGAL_KEY_PATTERN.matcher(key).fullMatch()
+
+        match (matcher) {
+            case Some(K) => ()
+            case None => throw IllegalArgumentException("keys must match regex [a-z0-9_-]{1,64}: \"" + "${key}" + "\"")
+        }
+
+    }
+
+    public func getDirectory(): Directory {
+        return directory
+    }
+
+    public func getMaxSize(): Int64 {
+        return maxSize
+    }
+
+    public func setMaxSize(maxSize: Int64): Unit {
+        this.maxSize = maxSize
+        cleanUp()
+    }
+
+    public func getSize(): Int64 {
+        return size
+    }
+
+    protected func completeEdit(editor: Editor, success: Bool): Unit {
+        synchronized (lock) {
+            let entry = editor.entry
+            if (!refEq(entry.currentEditor.getOrThrow(), editor)) {
+                throw  Exception("editor is others")
+            }
+
+            // If this edit is creating the entry for the first time, every index must have a value.
+            if (success && !entry.readable) {
+                for (i in 0..valueCount) {
+                    if (!editor.written.getOrThrow()[i]) {
+                    editor.abort()
+                    throw Exception("Newly created entry didn't create value for index ${i}")
+                }
+                if (!File.exists(entry.getDirtyFile(i).info.path.toString())) {
+                    editor.abort()
+                    return
+                }
+              }
+            }
+
+            for (i in 0..valueCount) {
+                let dirty = entry.getDirtyFile(i)
+                if (success) {
+                    if (File.exists(dirty.info.path.toString())) {
+                        let clean = entry.getDirtyFile(i)
+                        rename(dirty.info.path.toString(),clean.info.path.toString())
+                        let oldLength = entry.lengths[i]
+                        let newLength = clean.length
+                    }
+                } else {
+                    deleteIfExists(dirty)
+                }
+            }
+
+            redundantOpCount++
+            entry.currentEditor = None
+            var jw = wirteSink(journalWriter)
+            if (entry.readable || success) {
+                entry.readable = true
+                jw.write(CLEAN.toUtf8Array())
+                jw.write(" ".toUtf8Array())
+                jw.write(entry.key.toUtf8Array())
+                jw.write(entry.getLengths().toUtf8Array())
+                jw.write("\n".toUtf8Array())
+                if (success) {
+                    entry.sequenceNumber = nextSequenceNumber
+                    nextSequenceNumber++
+                }
+            } else {
+                lruEntries.remove(entry.key)
+                jw.write(REMOVE.toUtf8Array())
+                jw.write(" ".toUtf8Array())
+                jw.write(entry.key.toUtf8Array())
+                jw.write("\n".toUtf8Array())
+            }
+
+            jw.flush()
+
+            if (size > maxSize || journalRebuildRequired()) {
+                cleanUp()
+            }
+        }
+    }
+
+    private func journalRebuildRequired(): Bool {
+        let redundantOpCompactThreshold = 2000
+        return redundantOpCount >= redundantOpCompactThreshold && redundantOpCount >= lruEntries.size
+    }
+
+    public func isClosed(): Bool {
+        synchronized (lock) {
+            match (journalWriter) {
+                case Some(K) => return false
+                case None => return true
+            }
+        }
+    }
+
+    private func checkNotClosed(): Unit {
+        match (journalWriter) {
+            case Some(K) => ()
+            case None => 
+                throw Exception("cache is closed")
+        }
+    }
+
+    public func flush(): Unit {
+        synchronized (lock) {
+            checkNotClosed()
+            trimToSize()
+            journalWriter.getOrThrow().flush()
+        }
+    }
+
+    protected static func inputStreamToString(ins: InputStream): String {
+        return Util.readFully(StringReader(ins))
+    }
+
+    public func edit(key: String): Option<Editor> {
+        return edit(key, ANY_SEQUENCE_NUMBER)
+    }
+
+    protected func edit(key: String, expectedSequenceNumber: Int64): Option<Editor> {
+        synchronized (lock) {
+            checkNotClosed()
+            validateKey(key)
+            var entrys: Option<Entry> = lruEntries.get(key)
+            var entry = Entry(key, this)
+            var hasNull: Bool = false
+            match (entrys) {
+                case Some(v) => 
+                    entry = v
+                case None => 
+                    hasNull = true
+            }
+            if (expectedSequenceNumber != ANY_SEQUENCE_NUMBER
+                && (hasNull || entry.sequenceNumber != expectedSequenceNumber)) {
+                return None
+            }
+
+            if (hasNull) {
+                entry = Entry(key, this)
+                lruEntries.put(key, entry)
+            } 
+            match (entry.currentEditor) {
+                case Some(K) => 
+                    return None
+                case None => 
+                    ()
+            }
+
+            var editor = Editor(entry,this)
+            entry.currentEditor = Option<Editor>.Some(editor)
+
+            let jw = journalWriter.getOrThrow()
+            jw.write(DIRTY.toUtf8Array())
+            jw.write(" ".toUtf8Array())
+            jw.write(key.toUtf8Array())
+            jw.write("\n".toUtf8Array())
+            jw.flush()
+            return Option<Editor>.Some(editor)
+        }
+    }
+}
+
+class Entry { 
+
+    protected var key: String
+    protected var lengths: Array<Int64>
+    protected var readable: Bool = false
+    protected var currentEditor: Option<Editor> = None
+    protected var sequenceNumber: Int64 = 0
+    private var disk: DiskLruCache
+
+    init(key: String, disk: DiskLruCache) {
+        this.disk = disk
+        this.key = key
+        this.lengths = Array<Int64>(disk.valueCount, item: 0)
+    }
+
+    public func getLengths(): String {
+        var result = StringBuilder()
+        for (src in lengths) {
+            result.append(' ')
+            result.append(src)
+        }
+        return result.toString()
+    }
+
+    public func setLengths(strings: Array<String>): Unit {
+        if (strings.size != disk.valueCount) {
+            throw Exception("unexpected journal line: ${strings.toString()}" )
+        }
+        
+        try {
+            for (i in 0..strings.size) {
+                lengths[i] = Int64.parse(strings[i])
+            }
+        } catch (e: Exception) {
+            throw Exception("unexpected journal line: ${strings.toString()}" )
+        }
+    }
+
+    public func getCleanFile(i: Int64): File {
+        return File(disk.directory.info.path.join(key+"."+"${i}"), Open(true, true))
+    }
+
+    public func getDirtyFile(i: Int64): File {
+        return File(disk.directory.info.path.join(key+"."+"${i}"+".tmp"), Open(true, true))
+    }
+}
+
+public class Editor {
+    let entry: Entry
+    protected let written: Option<Array<Bool>>
+    private var hasErrors: Bool = false
+    private var committed: Bool = false
+    private let disk: DiskLruCache
+    private let lock: Monitor = Monitor()
+
+    init(entry: Entry, disk: DiskLruCache) {
+        this.entry = entry
+        this.disk = disk
+        this.written = if (!entry.readable) {
+            Array<Bool>(disk.valueCount, item: false)
+        } else {
+            Option<Array<Bool>>.None
+        }
+    }
+
+    public func abort(): Unit {
+        disk.completeEdit(this, false)
+    }
+
+    public func newInputStream(index: Int64): Option<InputStream> {
+        synchronized (disk.lock) {
+            if(!refEq(entry.currentEditor.getOrThrow(), this)) {
+                throw Exception()
+            }
+            if (!entry.readable) {
+                return Option<InputStream>.None
+            }
+
+            try {
+                return Option<InputStream>.Some(entry.getCleanFile(index))
+            } catch (e: Exception) {
+                return Option<InputStream>.None
+            }
+        }
+    }
+
+    public func getString(index: Int64): String {
+        let inse: Option<InputStream> = newInputStream(index)
+        match (inse) {
+            case Some(K) => 
+                return DiskLruCache.inputStreamToString(K)
+            case None => 
+                return ""
+        }
+    }
+
+    public func newOutputStream(index: Int64): File {
+        synchronized(disk.lock) {
+            if(!refEq(entry.currentEditor.getOrThrow(), this)) {
+                throw Exception()
+            }
+            if (!entry.readable) {
+                let writtense = written.getOrThrow()
+                writtense[index] = true
+            }
+            let dirtyFile: File = entry.getDirtyFile(index)
+            return dirtyFile
+        }
+    }
+
+    public func set(index: Int64, value: String): Unit {
+        let writer = newOutputStream(index)
+        try {
+            if (writer.canWrite()) {
+                writer.write(value.toUtf8Array())
+            }
+        } finally {
+            writer.close()
+        }
+        
+    }
+
+    public func commit(): Unit {
+        if (hasErrors) {
+            disk.completeEdit(this, false)
+            disk.remove(entry.key)
+        } else {
+            disk.completeEdit(this, true)
+        }
+        committed = true
+    }
+
+    public func abortUnlessCommitted(): Unit {
+        if (!committed) {
+            try {
+                abort()
+            } catch (ignored: Exception) {
+            }
+        }
+    }
+}
+
+
+public class Snapshot {
+
+    private var key: String
+    private var sequenceNumber: Int64
+    private var ins: Array<File>
+    private var lengths: Array<Int64>
+    private var disk: DiskLruCache
+
+    init(key: String, sequenceNumber: Int64, ins: Array<File>, lengths: Array<Int64>, disk: DiskLruCache) {
+        this.key = key
+        this.sequenceNumber = sequenceNumber
+        this.ins = ins
+        this.lengths = lengths
+        this.disk = disk
+    }
+
+    public func edit(): Option<Editor> {
+        return disk.edit(key, sequenceNumber)
+    }
+
+    public func getInputStream(index: Int64): File {
+        return ins[index]
+    }
+
+    public func getString(index: Int64): String {
+      return DiskLruCache.inputStreamToString(getInputStream(index))
+    }
+
+    public func getLength(index: Int64): Int64 {
+        return lengths[index]
+    }
+
+    public func close(): Unit {
+        for (fse in ins) {
+            Util.closeQuietly(fse)
+        }
+    }
 
 }
