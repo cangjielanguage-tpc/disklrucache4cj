@@ -32,11 +32,11 @@ class Util {
     }
 
     static func closeQuietly(closeable: Resource) {
-            try {
-                closeable.close()
-            }catch (e: Exception) {
-                throw e
-            }
+        try {
+            closeable.close()
+        }catch (e: Exception) {
+            throw e
+        }
     }
 }
 
@@ -96,5 +96,26 @@ public interface Sink {
     func write(bytes: Array<Byte>): Unit
     func flush(): Unit
     func close(): Unit
+}
+
+class FileSink <: Sink {
+
+    let file: File
+
+    init (file: File) {
+        this.file = file
+    }
+
+    public func write(bytes: Array<Byte>): Unit {
+        file.write(bytes)
+    }
+
+    public func flush(): Unit {
+        file.flush()
+    }
+
+    public func close(): Unit {
+        file.close()
+    }
 }
 
