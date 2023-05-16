@@ -84,13 +84,6 @@ class ReallBufferSink <: Sink {
     }
 }
 
-class BlackSink <: Sink {
-    public func write(bytes: Array<Byte>): Unit {}
-
-    public func flush(): Unit {}
-
-    public func close(): Unit {}
-}
 
 public interface Sink {
     func write(bytes: Array<Byte>): Unit
