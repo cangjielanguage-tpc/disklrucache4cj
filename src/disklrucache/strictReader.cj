@@ -56,7 +56,7 @@ class StrictLineReader {
                     }else {
                         lineEnd = i
                     }
-                    let res = buf.slice(pos,lineEnd -pos).toString()
+                    let res = unsafe { String.fromUtf8Unchecked(buf.slice(pos,lineEnd -pos)) }
                     pos = i + 1
                     return res
                 }
