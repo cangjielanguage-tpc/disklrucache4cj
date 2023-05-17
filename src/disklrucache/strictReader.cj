@@ -27,13 +27,10 @@ class StrictLineReader {
     }
 
     public init(input: InputStream, capacity: Int64, charset: Charset) {
-        if (input.length == 0) {
-            throw Exception("inputStream is null")
-        }
         if (capacity <  0) {
             throw Exception("capacity <= 0")
         }
-        if (!(charset.nameEquals("ISO_8859_2"))) {
+        if (!(charset.nameEquals("ISO-8859-2"))) {
             throw IllegalArgumentException("Unsupported encoding")
         }
         this.input = input
@@ -85,10 +82,6 @@ class StrictLineReader {
             return ""
         }
         
-    }
-
-    public func hasUnterminatedLine(): Bool {
-        return (end == -1)
     }
 
     private func fillBuf(): Unit {

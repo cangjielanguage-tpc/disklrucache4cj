@@ -42,9 +42,21 @@ public class DiskLruCache {
     private init(directory: Directory, appVersion: Int64, valueCount: Int64, maxSize: Int64) {
         this.directory = directory
         this.appVersion = appVersion
-        this.journalFile = File(directory.info.path.join(JOURNAL_FILE), Open(true, true))
-        this.journalFileTmp = File(directory.info.path.join(JOURNAL_FILE_TEMP), Open(true, true))
-        this.journalFileBackup = File(directory.info.path.join(JOURNAL_FILE_BACKUP), Open(true, true))
+        if(File.exists(directory.info.path.join(JOURNAL_FILE))) {
+            this.journalFile = File(directory.info.path.join(JOURNAL_FILE), Open(true,true))
+        } else {
+            this.journalFile = File(directory.info.path.join(JOURNAL_FILE), Create(true))
+        }
+        if(File.exists(directory.info.path.join(JOURNAL_FILE_TEMP))) {
+            this.journalFileTmp = File(directory.info.path.join(JOURNAL_FILE_TEMP), Open(true,true))
+        } else {
+            this.journalFileTmp = File(directory.info.path.join(JOURNAL_FILE_TEMP), Create(true))
+        }
+        if(File.exists(directory.info.path.join(JOURNAL_FILE_BACKUP))) {
+            this.journalFileBackup = File(directory.info.path.join(JOURNAL_FILE_BACKUP), Open(true,true))
+        } else {
+            this.journalFileBackup = File(directory.info.path.join(JOURNAL_FILE_BACKUP), Create(true))
+        }
         this.valueCount = valueCount
         this.maxSize = maxSize
 
@@ -59,30 +71,33 @@ public class DiskLruCache {
         }
 
         // If a bkp file exists, use it instead.
-        var backupFile = File(directory.info.path.join(JOURNAL_FILE_BACKUP), Open(true, true))
-        if (File.exists(backupFile.info.path.toString())) {
-
-            var journalFile = File(directory.info.path.join(JOURNAL_FILE_TEMP), Open(true, true))
+        if (File.exists(directory.info.path.join(JOURNAL_FILE_BACKUP).toString())) {
+            var backupFile = File(directory.info.path.join(JOURNAL_FILE_BACKUP), Open(true, true))
             // If journal file also exists just delete backup file.
-            if (File.exists(journalFile.info.path.toString())) {
+            if (File.exists(directory.info.path.join(JOURNAL_FILE).toString())) {
+                var journalFile = File(directory.info.path.join(JOURNAL_FILE), Open(true, true))
                 File.delete(backupFile.info.path.toString())
             } else {
-                renameTo(backupFile, journalFile, false)
+                renameToes(directory.info.path.join(JOURNAL_FILE_BACKUP).toString(), directory.info.path.join(JOURNAL_FILE).toString())
             }
         }
 
         // Prefer to pick up where we left off.
         var cache: DiskLruCache = DiskLruCache(directory, appVersion, valueCount, maxSize)
-        if (File.exists(cache.journalFile.info.path.toString())) {
-            try {
-                cache.readJournal()
-                cache.processJournal()  
-                cache.journalWriter = ReallBufferSink(FileSink(File(cache.journalFile.info.path.toString(), Append)))
-                return cache
-            } catch (e: Exception) {
-                println("DiskLruCache ${directory.info.path.toString()} is corrupt: ${e.toString()}, removing")
-                cache.delete()
+        if (File.exists(directory.info.path.join(JOURNAL_FILE).toString())) {
+            var journalFile = File(directory.info.path.join(JOURNAL_FILE), Open(true, true))
+            if (journalFile.length != 0 ) {
+                try {
+                    cache.readJournal()
+                    cache.processJournal()  
+                    cache.journalWriter = ReallBufferSink(FileSink(File(cache.journalFile.info.path.toString(), Append)))
+                    return cache
+                } catch (e: Exception) {
+                    println("DiskLruCache ${directory.info.path.toString()} is corrupt: ${e.toString()}, removing")
+                    cache.delete()
+                }
             }
+            
         }
 
         cache = DiskLruCache(directory, appVersion, valueCount, maxSize)
@@ -192,7 +207,7 @@ public class DiskLruCache {
                 case Some(s) =>
                     s.close()
             }
-            var writer = ReallBufferSink(FileSink(directory.createFile(JOURNAL_FILE_TEMP)))
+            var writer = ReallBufferSink(FileSink(journalFileTmp))
 
             try {
                 writer.write(MAGIC.toUtf8Array())
@@ -327,6 +342,10 @@ public class DiskLruCache {
 
     }
 
+    private static func renameToes(fo: String, to: String): Unit {
+        rename(fo,to)
+    }
+
     private func cleanUp(): Unit {
         synchronized (lock) {
             match (journalWriter) {
@@ -379,14 +398,14 @@ public class DiskLruCache {
             if (success && !entry.readable) {
                 for (i in 0..valueCount) {
                     if (!editor.written.getOrThrow()[i]) {
-                    editor.abort()
-                    throw Exception("Newly created entry didn't create value for index ${i}")
+                        editor.abort()
+                        throw Exception("Newly created entry didn't create value for index ${i}")
+                    }
+                    if (!File.exists(entry.getDirtyFile(i).info.path.toString())) {
+                        editor.abort()
+                        return
+                    }
                 }
-                if (!File.exists(entry.getDirtyFile(i).info.path.toString())) {
-                    editor.abort()
-                    return
-                }
-              }
             }
 
             for (i in 0..valueCount) {
@@ -397,6 +416,8 @@ public class DiskLruCache {
                         rename(dirty.info.path.toString(),clean.info.path.toString())
                         let oldLength = entry.lengths[i]
                         let newLength = clean.length
+                        entry.lengths[i] = newLength
+                        size = size - oldLength + newLength
                     }
                 } else {
                     deleteIfExists(dirty)
@@ -553,11 +574,19 @@ class Entry {
     }
 
     public func getCleanFile(i: Int64): File {
-        return File(disk.directory.info.path.join(key+"."+"${i}"), Open(true, true))
+        if(File.exists(disk.directory.info.path.join(key+"."+"${i}"))) {
+            return File(disk.directory.info.path.join(key+"."+"${i}"), Open(true,true))
+        } else {
+            return File(disk.directory.info.path.join(key+"."+"${i}"), Create(true))
+        }
     }
 
     public func getDirtyFile(i: Int64): File {
-        return File(disk.directory.info.path.join(key+"."+"${i}"+".tmp"), Open(true, true))
+        if(File.exists(disk.directory.info.path.join(key+"."+"${i}"+".tmp"))) {
+            return File(disk.directory.info.path.join(key+"."+"${i}"+".tmp"), Open(true,true))
+        } else {
+            return File(disk.directory.info.path.join(key+"."+"${i}"+".tmp"), Create(true))
+        }
     }
 }
 
