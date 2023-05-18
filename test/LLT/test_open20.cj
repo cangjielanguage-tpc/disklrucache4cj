@@ -1,0 +1,36 @@
+// DEPENDENCE: ./DiskLruCacheTest02
+// EXEC: cjc %import-path %L %l %f
+// EXEC: ./main
+
+from disklrucache import disklrucache.*
+from std import io.*
+from std import fs.*
+from std import os.posix.*
+from std import unittest.*
+from std import unittest.testmacro.*
+main() {
+
+    let lrucache = LruCacheOpen1Test()
+    lrucache.open1Test()
+    return 0
+}
+
+@Test
+public class LruCacheOpen1Test {
+    @TestCase
+    public func open1Test(): Unit {
+
+        var path: String = getcwd()
+        var TmpDir = path + "/DiskLruCacheTest02"
+        let appVersion = 10
+        var cacheDir = Directory(TmpDir) 
+        var cache = DiskLruCache.open(cacheDir, appVersion, 4, Int64(Int32.Max))
+        let key = "k1"
+        let src = cache.edit(key).getOrThrow()
+        src.set(0, "ABC")
+        src.set(1, "DE")
+        let pc = src.getString(0).isEmpty()
+        @Assert(true, pc)    
+    }
+}
+

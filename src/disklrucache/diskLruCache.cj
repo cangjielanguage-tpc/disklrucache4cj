@@ -412,10 +412,10 @@ public class DiskLruCache {
                 let dirty = entry.getDirtyFile(i)
                 if (success) {
                     if (File.exists(dirty.info.path.toString())) {
-                        let clean = entry.getDirtyFile(i)
+                        let clean = entry.getCleanFile(i)
                         rename(dirty.info.path.toString(),clean.info.path.toString())
                         let oldLength = entry.lengths[i]
-                        let newLength = clean.length
+                        let newLength = FileInfo(clean.info.path.toString()).length
                         entry.lengths[i] = newLength
                         size = size - oldLength + newLength
                     }
