@@ -1,39 +1,30 @@
 <div align="center">
-<h1>库名</h1>
+<h1>diskLruCache4cj</h1>
 </div>
 
 <p align="center">
 <img alt="" src="https://img.shields.io/badge/release-v0.0.1-brightgreen" style="display: inline-block;" />
 <img alt="" src="https://img.shields.io/badge/build-pass-brightgreen" style="display: inline-block;" />
 <img alt="" src="https://img.shields.io/badge/cjc-v0.38.2-brightgreen" style="display: inline-block;" />
-<img alt="" src="https://img.shields.io/badge/cjcov-50%25-red" style="display: inline-block;" />
+<img alt="" src="https://img.shields.io/badge/cjcov-80%25-brightgreen" style="display: inline-block;" />
 <img alt="" src="https://img.shields.io/badge/project-open-brightgreen" style="display: inline-block;" />
 </p>
 
 ## 介绍
 
-介绍库或者框架符合的标准，应用领域，解决什么问题。有哪些主要的特点，与同类库相比有哪些优点。
+DiskLruCache 是一个管理硬盘内容的存储管理工具，它采用了最近最少使用（LRU）算法，以对硬盘中存储的文件进行管理，在存储空间短缺的情况下，会优先将最近最少使用的文件删除，以扩展可用的硬盘空间。
+
+参考地址: https://github.com/JakeWharton/DiskLruCache 版本2.0.2
 
 ### 特性
 
-- 🚀 特性1
+- 🚀 支持数据写入硬盘缓存中
 
-- 🚀 特性2
+- 🚀 支持从硬盘缓存中读取数据
 
-- 💪 特性3
+- 💪 支持从硬盘缓存中删除指定key值的缓存文件
 
-- 🛠️ 特性4
-
-- 🌍 特性5
-
-- 💡  特性6
-
-### 路线
-
-<p align="center">
-<img src="./doc/assets/milestone.png" width="100%" >
-</p>
-路线图roadmap在 doc/framework-roadmap-logo.pptx 中有源文件。
+- 🛠️ 支持同步缓存文件的操作记录至journal和关闭缓存
 
 
 ## 软件架构
@@ -41,10 +32,9 @@
 ### 架构图
 
 <p align="center">
-<img src="./doc/assets/framework.png" width="60%" >
+<img src="./doc/assets/readme_framework.png" width="60%" >
 </p>
 
-架构图文字说明，包括模块说明、架构层次等详细说明。
 
 ### 源码目录
 
@@ -53,79 +43,86 @@
 ├── README.md
 ├── doc
 │   ├── assets
-│   ├── cjcov
-│   ├── design.md
-│   ├── proposal.md
-│   └── xxx_lib.md
+│   └── feature_api.md
 ├── src
-│   └── Template.cj
-└── test
-    ├── HLT
-    ├── LLT
-    └── UT
+│   └── disklrucache
+├── test
+│    ├── HLT
+│    └── LLT
+├── CHANGELOG.md
+├── gitee_gate.cfg
+├── LICENSE.txt
+├── module.json
+├── README.md
+└── README.OpenSource
 ```
 
-- `doc`  文档目录，用于存放设计、API接口等文档
-- `src`  源码目录
-- `test` 测试目录
+- `doc`  文档目录，用于存API接口文档
+- `src`  是库源码目录
+- `test` 存放 HLT 测试用例、LLT 自测用例
 
 ### 接口说明
 
-主要类和函数接口说明详见 [API](./doc/api.md)
+主要类和函数接口说明详见 [API](./doc/feature_api.md)
 
 
 ## 使用说明
 
-### 编译构建
-
-描述具体的编译过程：
+### 编译
 
 ```shell
-cpm update
 cpm build
 ```
 
 ### 功能示例
-#### xxx 功能示例
+#### 数据写入硬盘缓存中 功能示例
 
-功能示例描述:
-
-示例代码如下：
 
 ```cangjie
-import xxx.*
+from disklrucache import disklrucache.*
+from std import io.*
+from std import fs.*
+from std import os.posix.*
+from std import unittest.*
+from std import unittest.testmacro.*
+
 main() {
- xxxx
+
+    let lrucache = LruCacheOpen1Test()
+    lrucache.open1Test()
+    return 0
+}
+
+@Test
+public class LruCacheOpen1Test {
+    @TestCase
+    public func open1Test(): Unit {
+
+        var path: String = getcwd()
+        var TmpDir = path + "/DiskLruCacheTest"
+        let appVersion = 100
+        var cacheDir = Directory.create(TmpDir) 
+        var cache = DiskLruCache.open(cacheDir, appVersion, 2, Int64(Int32.Max))
+        let key = "k1"
+        let src = cache.edit(key).getOrThrow()
+        src.set(0, "ABC")
+        src.set(1, "DE")
+        let pc = src.getString(0).isEmpty()
+        src.commit()
+        println("success")
+        @Assert(true, pc)    
+    }
 }
 ```
 
 执行结果如下：
 
 ```shell
-xxx
-```
-
-#### xxxx 功能示例
-
-功能示例描述:
-
-示例代码如下：
-
-```cangjie
-import xxx.*
-main() {
- xxxx
-}
-```
-
-执行结果如下：
-
-```shell
-xxx
+success
 ```
 
 ## 开源协议
-xx License
+Apache License 2.0
 
 ## 参与贡献
 
