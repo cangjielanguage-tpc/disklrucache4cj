@@ -533,6 +533,42 @@ public class DiskLruCache {
             return Option<Editor>.Some(editor)
         }
     }
+
+    public func get(key: String): Option<Snapshot> {
+        synchronized (lock) { 
+            checkNotClosed()
+            validateKey(key)
+
+            var entryso: Option<Entry> = lruEntries.get(key)
+            var entry = Entry(key, this)
+            match (entryso) {
+                case Some(v) => 
+                    entry = v
+                case None => 
+                    return None
+            }
+
+            if (!entry.readable) {
+                return None
+            }
+
+            var ins: Array<File> = Array<File>(valueCount, item: unsafe{zeroValue<File>()})
+            for (i in 0..valueCount) {
+                ins[i] = entry.getCleanFile(i)
+            }
+            redundantOpCount++
+            let jw = journalWriter.getOrThrow()
+            jw.write(READ.toUtf8Array())
+            jw.write(" ".toUtf8Array())
+            jw.write(key.toUtf8Array())
+            jw.write("\n".toUtf8Array())
+
+            if (journalRebuildRequired()) {
+                 cleanUp()
+            }
+            return Snapshot(key, entry.sequenceNumber, ins, entry.lengths, this)
+        }
+    }
 }
 
 class Entry { 
@@ -707,7 +743,8 @@ public class Snapshot {
     }
 
     public func getInputStream(index: Int64): File {
-        return ins[index]
+        let src = ins.get(index).getOrThrow()
+        return src
     }
 
     public func getString(index: Int64): String {

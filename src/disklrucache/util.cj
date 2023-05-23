@@ -69,9 +69,6 @@ class ReallBufferSink <: Sink {
         }
     }
 
-    func getBuffer(): ByteArrayStream {
-        return buf
-    }
 
     public func close(): Unit {
         if (!closed) {
