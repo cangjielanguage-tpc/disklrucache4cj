@@ -6,7 +6,7 @@
 <img alt="" src="https://img.shields.io/badge/release-v0.0.1-brightgreen" style="display: inline-block;" />
 <img alt="" src="https://img.shields.io/badge/build-pass-brightgreen" style="display: inline-block;" />
 <img alt="" src="https://img.shields.io/badge/cjc-v0.38.2-brightgreen" style="display: inline-block;" />
-<img alt="" src="https://img.shields.io/badge/cjcov-80%25-brightgreen" style="display: inline-block;" />
+<img alt="" src="https://img.shields.io/badge/cjcov-85.8%25-brightgreen" style="display: inline-block;" />
 <img alt="" src="https://img.shields.io/badge/project-open-brightgreen" style="display: inline-block;" />
 </p>
 
@@ -111,6 +111,139 @@ public class LruCacheOpen1Test {
         src.commit()
         println("success")
         @Assert(true, pc)    
+    }
+}
+```
+
+执行结果如下：
+
+```shell
+success
+```
+
+#### 从缓存中读取数据 功能示例
+
+```cangjie
+from disklrucache import disklrucache.*
+from std import io.*
+from std import fs.*
+from std import os.posix.*
+from std import unittest.*
+from std import unittest.testmacro.*
+
+main() {
+
+    let lrucache = LruCacheOpen1Test()
+    lrucache.open1Test()
+    return 0
+}
+
+@Test
+public class LruCacheOpen1Test {
+    @TestCase
+    public func open1Test(): Unit {
+
+        var path: String = getcwd()
+        var TmpDir = path + "/DiskLruCacheTest37"
+        let appVersion = 100
+        var cacheDir = Directory.create(TmpDir) 
+        var cache = DiskLruCache.open(cacheDir, appVersion, 2, Int64(Int32.Max))
+        let key = "k1"
+        let src = cache.edit(key).getOrThrow()
+        src.set(0, "OP")
+        src.set(1, "LKll")
+        src.commit()
+        let sc = cache.get("k1").getOrThrow().getString(0)
+        println("success")
+        @Assert("OP", sc)
+    }
+}
+```
+
+执行结果如下：
+
+```shell
+success
+```
+
+#### 缓存中删除指定key值的缓存文件 功能示例
+
+```cangjie
+from disklrucache import disklrucache.*
+from std import io.*
+from std import fs.*
+from std import os.posix.*
+from std import unittest.*
+from std import unittest.testmacro.*
+
+main() {
+
+    let lrucache = LruCacheOpen1Test()
+    lrucache.open1Test()
+    return 0
+}
+
+@Test
+public class LruCacheOpen1Test {
+    @TestCase
+    public func open1Test(): Unit {
+
+        var path: String = getcwd()
+        var TmpDir = path + "/DiskLruCacheTest"
+        let appVersion = 100
+        var cacheDir = Directory(TmpDir) 
+        var cache = DiskLruCache.open(cacheDir, appVersion, 2, Int64(Int32.Max))
+        let key = "k1"
+        let src = cache.edit(key).getOrThrow()
+        src.set(0, "ABC")
+        src.set(1, "DE")
+        let pc = src.getString(0).isEmpty()
+        src.commit()
+        let cq = cache.remove("k1")
+        println("success")
+        @Assert(true, cq)    
+    }
+}
+```
+
+执行结果如下：
+
+```shell
+success
+```
+
+#### 同步缓存文件的操作记录至journal和关闭缓存 功能示例
+
+```cangjie
+from disklrucache import disklrucache.*
+from std import io.*
+from std import fs.*
+from std import os.posix.*
+from std import unittest.*
+from std import unittest.testmacro.*
+
+main() {
+
+    let lrucache = LruCacheOpen1Test()
+    lrucache.open1Test()
+    return 0
+}
+
+@Test
+public class LruCacheOpen1Test {
+    @TestCase
+    public func open1Test(): Unit {
+
+        var path: String = getcwd()
+        var TmpDir = path + "/DiskLruCacheTest"
+        let appVersion = 100
+        var cacheDir = Directory.create(TmpDir)
+        var cache = DiskLruCache.open(cacheDir, appVersion, 2, Int64(Int32.Max))
+        let src = cache.close()
+        let src1 = cache.isClosed()
+        println("success")
+        @Assert(true, cache.isClosed())
+
     }
 }
 ```

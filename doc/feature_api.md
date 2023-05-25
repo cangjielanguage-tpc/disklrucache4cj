@@ -4,7 +4,6 @@
 
 DiskLruCache 是一个管理硬盘内容的存储管理工具，它采用了最近最少使用（LRU）算法，以对硬盘中存储的文件进行管理，在存储空间短缺的情况下，会优先将最近最少使用的文件删除，以扩展可用的硬盘空间。
 
-## 1 支持数据写入硬盘缓存中
 
 前置条件：NA 
 
@@ -97,59 +96,6 @@ public class DiskLruCache {
     public func edit(key: String): Option<Editor>
 
 }
-```
-
-#### 1.1.2 示例
-
-```cangjie
-from disklrucache import disklrucache.*
-from std import io.*
-from std import fs.*
-from std import os.posix.*
-from std import unittest.*
-from std import unittest.testmacro.*
-
-main() {
-
-    let lrucache = LruCacheOpen1Test()
-    lrucache.open1Test()
-    return 0
-}
-
-@Test
-public class LruCacheOpen1Test {
-    @TestCase
-    public func open1Test(): Unit {
-
-        var path: String = getcwd()
-        var TmpDir = path + "/DiskLruCacheTest"
-        let appVersion = 100
-        var cacheDir = Directory.create(TmpDir) 
-        var cache = DiskLruCache.open(cacheDir, appVersion, 2, Int64(Int32.Max))
-        let key = "k1"
-        let src = cache.edit(key).getOrThrow()
-        src.set(0, "ABC")
-        src.set(1, "DE")
-        let pc = src.getString(0).isEmpty()
-        src.commit()
-        println("success")
-        @Assert(true, pc)    
-    }
-}
-```
-执行结果如下：
-
-```
-success
-```
-
-## 2 其他接口
-
-### 2.1 Editor
-
-文件的编辑器
-
-```cangjie
 public class Editor {
 
     /**
@@ -199,4 +145,274 @@ public class Editor {
      */
     public func abortUnlessCommitted(): Unit 
 }
+```
+
+#### 1.1.2 示例
+
+```cangjie
+from disklrucache import disklrucache.*
+from std import io.*
+from std import fs.*
+from std import os.posix.*
+from std import unittest.*
+from std import unittest.testmacro.*
+
+main() {
+
+    let lrucache = LruCacheOpen1Test()
+    lrucache.open1Test()
+    return 0
+}
+
+@Test
+public class LruCacheOpen1Test {
+    @TestCase
+    public func open1Test(): Unit {
+
+        var path: String = getcwd()
+        var TmpDir = path + "/DiskLruCacheTest"
+        let appVersion = 100
+        var cacheDir = Directory.create(TmpDir) 
+        var cache = DiskLruCache.open(cacheDir, appVersion, 2, Int64(Int32.Max))
+        let key = "k1"
+        let src = cache.edit(key).getOrThrow()
+        src.set(0, "ABC")
+        src.set(1, "DE")
+        let pc = src.getString(0).isEmpty()
+        src.commit()
+        println("success")
+        @Assert(true, pc)    
+    }
+}
+```
+执行结果如下：
+
+```
+success
+```
+
+### 1.2 支持从硬盘缓存中读取数据
+
+支持从硬盘缓存中读取数据
+
+#### 1.2.1 主要接口
+
+```cangjie
+public class DiskLruCache {
+
+    /**
+     * 获取缓存的对象
+     * 
+     * 参数 key - 缓存文件的标记值
+     * 返回值 Option<Snapshot> - 读取文件的对象
+     */
+    public func get(key: String): Option<Snapshot>
+
+}
+
+public class Snapshot {
+
+    /**
+     * 获取文件编辑的对象
+     *
+     * 返回值 Option<Editor> - 读取文件编辑的对象
+     */
+    public func edit(): Option<Editor>
+
+    /**
+     * 返回缓存的文件流
+     * 
+     * 参数 index - 缓存文件的设置的标记值
+     * 返回值 File - 缓存的文件对象
+     */
+     public func getInputStream(index: Int64): File
+
+    /**
+     * 获取对应缓存的数据
+     * 
+     * 参数 index - 缓存文件的设置的标记值
+     * 返回值 String - 存储的值
+     */
+    public func getString(index: Int64): String
+
+    /**
+     * 获取缓存数据的长度
+     * 
+     * 参数 index - 缓存文件的设置的标记值
+     * 返回值 Int64 - 缓存数据的长度
+     */
+    public func getLength(index: Int64): Int64
+
+    /**
+     * 关闭缓存文件流
+     */
+    public func close(): Unit
+}
+```
+
+#### 1.2.2 示例
+
+```cangjie
+from disklrucache import disklrucache.*
+from std import io.*
+from std import fs.*
+from std import os.posix.*
+from std import unittest.*
+from std import unittest.testmacro.*
+
+main() {
+
+    let lrucache = LruCacheOpen1Test()
+    lrucache.open1Test()
+    return 0
+}
+
+@Test
+public class LruCacheOpen1Test {
+    @TestCase
+    public func open1Test(): Unit {
+
+        var path: String = getcwd()
+        var TmpDir = path + "/DiskLruCacheTest37"
+        let appVersion = 100
+        var cacheDir = Directory.create(TmpDir) 
+        var cache = DiskLruCache.open(cacheDir, appVersion, 2, Int64(Int32.Max))
+        let key = "k1"
+        let src = cache.edit(key).getOrThrow()
+        src.set(0, "OP")
+        src.set(1, "LKll")
+        src.commit()
+        let sc = cache.get("k1").getOrThrow().getString(0)
+        println("success")
+        @Assert("OP", sc)
+    }
+}
+```
+执行结果如下：
+
+```
+success
+```
+
+### 1.3 支持从硬盘缓存中删除指定key值的缓存文件
+
+缓存中删除指定key值的缓存文件
+
+#### 1.3.1 主要接口
+
+```cangjie
+public class DiskLruCache {
+
+    /**
+     * 删除指定key值的缓存
+     * 
+     * 参数 key - 缓存文件的标记值
+     * 返回值 Bool - 是否删除成功
+     */
+    public func remove(key: String): Bool
+
+}
+```
+
+#### 1.3.2 示例
+
+```cangjie
+from disklrucache import disklrucache.*
+from std import io.*
+from std import fs.*
+from std import os.posix.*
+from std import unittest.*
+from std import unittest.testmacro.*
+
+main() {
+
+    let lrucache = LruCacheOpen1Test()
+    lrucache.open1Test()
+    return 0
+}
+
+@Test
+public class LruCacheOpen1Test {
+    @TestCase
+    public func open1Test(): Unit {
+
+        var path: String = getcwd()
+        var TmpDir = path + "/DiskLruCacheTest"
+        let appVersion = 100
+        var cacheDir = Directory(TmpDir) 
+        var cache = DiskLruCache.open(cacheDir, appVersion, 2, Int64(Int32.Max))
+        let key = "k1"
+        let src = cache.edit(key).getOrThrow()
+        src.set(0, "ABC")
+        src.set(1, "DE")
+        let pc = src.getString(0).isEmpty()
+        src.commit()
+        let cq = cache.remove("k1")
+        println("success")
+        @Assert(true, cq)    
+    }
+}
+```
+执行结果如下：
+
+```
+success
+```
+
+### 1.4 支持同步缓存文件的操作记录至journal和关闭缓存
+
+支持关闭缓存
+
+#### 1.4.1 主要接口
+
+```cangjie
+public class DiskLruCache {
+
+    /**
+     * 关闭此缓存,存储的值将保留在文件系统中
+     */
+    public func close(): Unit
+
+}
+```
+
+#### 1.4.2 示例
+
+```cangjie
+from disklrucache import disklrucache.*
+from std import io.*
+from std import fs.*
+from std import os.posix.*
+from std import unittest.*
+from std import unittest.testmacro.*
+
+main() {
+
+    let lrucache = LruCacheOpen1Test()
+    lrucache.open1Test()
+    return 0
+}
+
+@Test
+public class LruCacheOpen1Test {
+    @TestCase
+    public func open1Test(): Unit {
+
+        var path: String = getcwd()
+        var TmpDir = path + "/DiskLruCacheTest"
+        let appVersion = 100
+        var cacheDir = Directory.create(TmpDir)
+        var cache = DiskLruCache.open(cacheDir, appVersion, 2, Int64(Int32.Max))
+        let src = cache.close()
+        let src1 = cache.isClosed()
+        println("success")
+        @Assert(true, cache.isClosed())
+
+    }
+}
+```
+执行结果如下：
+
+```
+success
 ```
