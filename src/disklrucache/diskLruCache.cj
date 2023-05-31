@@ -207,6 +207,11 @@ public class DiskLruCache {
                 case Some(s) =>
                     s.close()
             }
+            if(File.exists(journalFileTmp.info.path.toString())) {
+                this.journalFileTmp = File(directory.info.path.join(JOURNAL_FILE_TEMP), Open(true,true))
+            } else {
+                this.journalFileTmp = File(directory.info.path.join(JOURNAL_FILE_TEMP), Create(true))
+            }
             var writer = ReallBufferSink(FileSink(journalFileTmp))
 
             try {
@@ -338,12 +343,12 @@ public class DiskLruCache {
         if (deleteDestination) {
             deleteIfExists(to)
         }
-        rename(fo.info.path.toString(),to.info.path.toString())
+        File.move(fo.info.path.toString(),to.info.path.toString(), true)
 
     }
 
     private static func renameToes(fo: String, to: String): Unit {
-        rename(fo,to)
+        File.move(fo,to,true)
     }
 
     private func cleanUp(): Unit {
@@ -379,6 +384,9 @@ public class DiskLruCache {
     }
 
     public func setMaxSize(maxSize: Int64): Unit {
+        if (maxSize <= 0) {
+            throw IllegalArgumentException("invalid cache size: ${maxSize}")
+        }
         this.maxSize = maxSize
         cleanUp()
     }
@@ -413,7 +421,7 @@ public class DiskLruCache {
                 if (success) {
                     if (File.exists(dirty.info.path.toString())) {
                         let clean = entry.getCleanFile(i)
-                        rename(dirty.info.path.toString(),clean.info.path.toString())
+                        File.move(dirty.info.path.toString(),clean.info.path.toString(), true)
                         let oldLength = entry.lengths[i]
                         let newLength = FileInfo(clean.info.path.toString()).length
                         entry.lengths[i] = newLength
