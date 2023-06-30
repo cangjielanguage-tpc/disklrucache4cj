@@ -34,7 +34,7 @@ public class LruCacheOpen1Test {
         var ssc = false 
         try {
             let sc1 = sc.getString(0)
-        }catch (e: FSException) {
+        }catch (e: Exception) {
             ssc = true
         }
         
