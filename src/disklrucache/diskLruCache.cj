@@ -737,6 +737,7 @@ public class Snapshot {
     private var ins: Array<File>
     private var lengths: Array<Int64>
     private var disk: DiskLruCache
+    private var isClosed: Bool = false
 
     init(key: String, sequenceNumber: Int64, ins: Array<File>, lengths: Array<Int64>, disk: DiskLruCache) {
         this.key = key
@@ -751,6 +752,9 @@ public class Snapshot {
     }
 
     public func getInputStream(index: Int64): File {
+        if (isClosed) {
+            throw Exception("Stream Closed")
+        }
         let src = ins.get(index).getOrThrow()
         return src
     }
@@ -764,6 +768,7 @@ public class Snapshot {
     }
 
     public func close(): Unit {
+        isClosed = true
         for (fse in ins) {
             Util.closeQuietly(fse)
         }
