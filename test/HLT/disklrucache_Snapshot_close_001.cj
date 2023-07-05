@@ -26,7 +26,13 @@ public class disklrucache_Snapshot_close_001 {
         src.commit()
         let Snapshot = cache.get("k1").getOrThrow()
         Snapshot.close()
-        println("getLength:${Snapshot.getLength(0)}")
-        @Assert(Snapshot.getLength(0), 2)
+        var strMsg = ""
+        try {
+            Snapshot.getInputStream(0)
+        }catch(e: Exception) {
+            println("e.message :${e.message}")
+            strMsg = e.message 
+        }
+        @Assert("Stream Closed", strMsg)
     }
 }
