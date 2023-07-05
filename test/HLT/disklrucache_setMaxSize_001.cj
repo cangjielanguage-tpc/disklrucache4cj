@@ -21,7 +21,12 @@ public class disklrucache_setMaxSize_001 {
 
         println("cache.getDirectory() :${cache.getDirectory().info.path.toString()}")
         println("cache.getMaxSize() :${cache.getMaxSize()}")
- 
+        @Assert(cache.getMaxSize(), 2147483647)
+
+        cache.setMaxSize(5)
+        println("cache.getMaxSize() :${cache.getMaxSize()}")
+        @Assert(cache.getMaxSize(), 5)
+
         var str_emsg = ""
         try{                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  
             cache.setMaxSize(-5)
@@ -31,7 +36,7 @@ public class disklrucache_setMaxSize_001 {
         
         println("e.message :${str_emsg}")
 
-        @Assert(str_emsg, "")
+        @Assert(str_emsg, "invalid cache size: -5")
 
     }
 }

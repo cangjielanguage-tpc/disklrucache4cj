@@ -14,7 +14,7 @@ public class disklrucache_flush_001 {
     public func disklrucache_flush_001(): Unit {
 
         var path: String = getcwd()
-        var TmpDir = path + "/disklrucache_open_001"
+        var TmpDir = path + "/disklrucache_flush_001"
         let appVersion = 100
         var cacheDir = Directory.create(TmpDir)
         var cache = DiskLruCache.open(cacheDir, appVersion, 2, Int64(Int32.Max))
@@ -26,9 +26,14 @@ public class disklrucache_flush_001 {
         println("cache.getDirectory() :${cache.getDirectory().info.path.toString()}")
         println("cache.isClosed() :${cache.isClosed()}")
 
-        cache.flush()
-        // @Assert(TmpDir, cache.getDirectory().info.path.toString())
-        // @Assert(2147483647, cache.getMaxSize())
+        var str_msg = ""
+        try{
+            cache.flush()
+        } catch (e:Exception){
+            str_msg = e.message
+        }
+        println("str_msg : ${str_msg}")
+        @Assert(str_msg, "cache is closed")
 
     }
 }
