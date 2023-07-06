@@ -25,11 +25,13 @@ public class LruCacheOpen1Test {
         var cacheDir = Directory(TmpDir) 
         var cache = DiskLruCache.open(cacheDir, appVersion, 2, 1)
         let n = 5000
+        var see = -1
         for (i in 0..n){
     	    let src = cache.edit("k1").getOrThrow()
             src.set(0, "ABC")
             src.set(1, "DE")
             src.commit()
+            see=i
     	}
         cache.remove("k1")
         let sc = cache.getMaxSize()

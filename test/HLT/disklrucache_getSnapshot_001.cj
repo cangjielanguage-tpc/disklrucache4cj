@@ -44,7 +44,7 @@ public class disklrucache_getSnapshot_001 {
         src.commit()
         var strmsg = ""
         try{
-            let sc = cache.get("k2").getOrThrow()
+            cache.get("k2").getOrThrow()
         } catch (e : NoneValueException) {
             strmsg = "NoneValueException"
         }

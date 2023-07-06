@@ -25,11 +25,13 @@ public class LruCacheOpen1Test {
         }
         var cache = DiskLruCache.open(cacheDir, appVersion, 2, Int64(Int32.Max))
     	let s = DateTime.now()
+        var see = -1
     	for (i in 0..n){
     	    let src = cache.edit("k1").getOrThrow()
             src.set(0, "ABC")
             src.set(1, "DE")
             src.commit()
+            see = i
     	}
     	let e = Duration.since(s).toNanoseconds()
     	println("[ PASSED ] CASE: testEventbus_${n} (${e} ns, ${e/n} ns/op)\n")

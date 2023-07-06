@@ -25,7 +25,7 @@ public class LruCacheOpen1Test {
         var cacheDir = Directory.create(TmpDir) 
         var cache = DiskLruCache.open(cacheDir, appVersion, 4, Int64(Int32.Max))
         let key = "k1"
-        let src = cache.edit(key).getOrThrow()
+        cache.edit(key).getOrThrow()
         let str = cache.getSize()
         @Assert(0, str)    
     }

@@ -26,7 +26,7 @@ public class LruCacheOpenTest {
         var cache = DiskLruCache.open(cacheDir, appVersion, 2, Int64(Int32.Max))
         var input = false
         try {
-            var size = cache.setMaxSize(-5)
+            cache.setMaxSize(-5)
         } catch (e: IllegalArgumentException) {
             input = true
         }

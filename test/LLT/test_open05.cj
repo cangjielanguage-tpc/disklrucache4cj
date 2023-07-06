@@ -24,8 +24,7 @@ public class LruCacheOpen1Test {
         let appVersion = 100
         var cacheDir = Directory.create(TmpDir)
         var cache = DiskLruCache.open(cacheDir, appVersion, 2, Int64(Int32.Max))
-        let src = cache.delete()
-        let src1 = cache.isClosed()
+        cache.delete()
         @Assert(true, cache.isClosed())
 
     }
