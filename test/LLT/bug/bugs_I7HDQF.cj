@@ -33,7 +33,7 @@ public class LruCacheOpen1Test {
         sc.close()
         var inps = -1
         try {
-            let sc1 = sc.getInputStream(0)
+            sc.getInputStream(0)
         }catch(e: Exception) {
             inps = 1      
         }

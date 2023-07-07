@@ -22,14 +22,13 @@ public class LruCacheOpen1Test {
         var path: String = getcwd()
         var TmpDir = path + "/DiskLruCacheTest"
         let appVersion = 10
-        let sc = 10086
         var cacheDir = Directory.create(TmpDir)
         var cache = DiskLruCache.open(cacheDir, appVersion, 2, Int64(Int32.Max))
         let key = "0123456789012345678901234567890123456789012345678901234567890123";
         let src = cache.edit(key).getOrThrow()
 
-        let str = src.set(0,"1")
-        let str1 = src.set(1,"42")
+        src.set(0,"1")
+        src.set(1,"42")
         let str3 = src.getString(0)
         @Assert(true, str3.isEmpty())    
     }

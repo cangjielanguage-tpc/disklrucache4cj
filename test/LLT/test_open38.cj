@@ -33,7 +33,7 @@ public class LruCacheOpen1Test {
         sc.close()
         var ssc = false 
         try {
-            let sc1 = sc.getString(0)
+            sc.getString(0)
         }catch (e: Exception) {
             ssc = true
         }

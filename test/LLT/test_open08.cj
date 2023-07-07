@@ -22,10 +22,9 @@ public class LruCacheOpen1Test {
         var path: String = getcwd()
         var TmpDir = path + "/DiskLruCacheTest"
         let appVersion = 10
-        let sc = 10086
         var cacheDir = Directory.create(TmpDir)
         var cache = DiskLruCache.open(cacheDir, appVersion, 2, Int64(Int32.Max))
-        let src = cache.setMaxSize(10086)
+        cache.setMaxSize(10086)
         let src1 = cache.getMaxSize()
         @Assert(10086, src1)
     }

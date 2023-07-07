@@ -24,7 +24,7 @@ public class LruCacheOpen1Test {
         let appVersion = 100
         var cacheDir = Directory.create(TmpDir)
          
-        var journalFile = File(cacheDir.info.path.join("journal"), Create(true))
+        File(cacheDir.info.path.join("journal"), Create(true))
         var cache = DiskLruCache.open(cacheDir, appVersion, 2, Int64(Int32.Max))
         let key = "k1"
         let src = cache.edit(key).getOrThrow()

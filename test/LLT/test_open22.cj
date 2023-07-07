@@ -25,7 +25,7 @@ public class LruCacheOpen1Test {
         var cacheDir = Directory.create(TmpDir)
         var Illegal = false
         try {
-            var cache = DiskLruCache.open(cacheDir, appVersion, -1, Int64(Int32.Max))
+            DiskLruCache.open(cacheDir, appVersion, -1, Int64(Int32.Max))
         }catch (e: Exception) {
             Illegal = true
         }

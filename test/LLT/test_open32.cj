@@ -32,9 +32,9 @@ public class LruCacheOpen1Test {
         src.set(3, "HI")
         src.set(4, "HI")
         src.set(5, "HI")
-        let pc = src.getString(0).isEmpty()
+        src.getString(0).isEmpty()
         src.commit() 
-        let str = cache.setMaxSize(119)
+        cache.setMaxSize(119)
         let stp = cache.getMaxSize()
         @Assert(119, stp)    
     }

@@ -75,7 +75,7 @@ public class DiskLruCache {
             var backupFile = File(directory.info.path.join(JOURNAL_FILE_BACKUP), Open(true, true))
             // If journal file also exists just delete backup file.
             if (File.exists(directory.info.path.join(JOURNAL_FILE).toString())) {
-                var journalFile = File(directory.info.path.join(JOURNAL_FILE), Open(true, true))
+                File(directory.info.path.join(JOURNAL_FILE), Open(true, true))
                 File.delete(backupFile.info.path.toString())
             } else {
                 renameToes(directory.info.path.join(JOURNAL_FILE_BACKUP).toString(), directory.info.path.join(JOURNAL_FILE).toString())
@@ -114,7 +114,7 @@ public class DiskLruCache {
         match (journalWriter) {
             case None =>
                 return
-            case Some(s) =>
+            case Some(_) =>
                 ()
         }
 
@@ -146,7 +146,7 @@ public class DiskLruCache {
             match (lruEntries.get(key)) {
                 case Some(k) => 
                     match (k.currentEditor) {
-                        case Some(v) => return false
+                        case Some(_) => return false
                         case None => ()
                     }
                     for (i in 0..valueCount) {
@@ -187,7 +187,7 @@ public class DiskLruCache {
                     for (i in 0..valueCount) {
                         size += entry.lengths[i]
                     }
-                case Some(k) =>
+                case Some(_) =>
                     entry.currentEditor = None
                     for (i in 0..valueCount) {
                         deleteIfExists(entry.getCleanFile(i))
@@ -226,7 +226,7 @@ public class DiskLruCache {
                 writer.write("\n".toUtf8Array())
                 for (entry in lruEntries.values()) {
                     match (entry.currentEditor) {
-                        case Some(ce) =>
+                        case Some(_) =>
                             writer.write((DIRTY+ " ").toUtf8Array())
                             writer.write(entry.key.toUtf8Array())
                             writer.write("\n".toUtf8Array())
@@ -258,8 +258,7 @@ public class DiskLruCache {
             let appVersionString = reader.readLine()
             let valueCountString = reader.readLine()
             let blank = reader.readLine()
-            if (!MAGIC.equals(magic) || !VERSION_1.equals(version) || !("${appVersion}").equals(appVersionString)
-                || !("${valueCount}").equals(valueCountString) || !"".equals(blank)) {
+            if (!MAGIC.equals(magic) || !VERSION_1.equals(version) || !("${appVersion}").equals(appVersionString) || !("${valueCount}").equals(valueCountString) || !"".equals(blank)) {
                 
                 throw Exception("unexpected journal header: [${magic}, ${version}, ${valueCountString}, ${blank}]")
             }
@@ -331,7 +330,7 @@ public class DiskLruCache {
     private static func deleteIfExists(file: File): Unit {
         if (File.exists(file.info.path.toString())) {
             try {
-                let strc = File.delete(file.info.path.toString())
+                File.delete(file.info.path.toString())
             }catch (e: Exception){
                 throw Exception("failed to delete ")
             }  
@@ -354,7 +353,7 @@ public class DiskLruCache {
     private func cleanUp(): Unit {
         synchronized (lock) {
             match (journalWriter) {
-                case Some(K) => ()
+                case Some(_) => ()
                 case None => return
             }
             trimToSize()
@@ -369,7 +368,7 @@ public class DiskLruCache {
         let matcher: Option<MatchData> = LEGAL_KEY_PATTERN.matcher(key).fullMatch()
 
         match (matcher) {
-            case Some(K) => ()
+            case Some(_) => ()
             case None => throw IllegalArgumentException("keys must match regex [a-z0-9_-]{1,64}: \"" + "${key}" + "\"")
         }
 
@@ -470,7 +469,7 @@ public class DiskLruCache {
     public func isClosed(): Bool {
         synchronized (lock) {
             match (journalWriter) {
-                case Some(K) => return false
+                case Some(_) => return false
                 case None => return true
             }
         }
@@ -478,7 +477,7 @@ public class DiskLruCache {
 
     private func checkNotClosed(): Unit {
         match (journalWriter) {
-            case Some(K) => ()
+            case Some(_) => ()
             case None => 
                 throw Exception("cache is closed")
         }
@@ -513,8 +512,7 @@ public class DiskLruCache {
                 case None => 
                     hasNull = true
             }
-            if (expectedSequenceNumber != ANY_SEQUENCE_NUMBER
-                && (hasNull || entry.sequenceNumber != expectedSequenceNumber)) {
+            if (expectedSequenceNumber != ANY_SEQUENCE_NUMBER && (hasNull || entry.sequenceNumber != expectedSequenceNumber)) {
                 return None
             }
 
@@ -523,7 +521,7 @@ public class DiskLruCache {
                 lruEntries.put(key, entry)
             } 
             match (entry.currentEditor) {
-                case Some(K) => 
+                case Some(_) => 
                     return None
                 case None => 
                     ()

@@ -30,7 +30,7 @@ public class LruCacheOpen1Test {
         src.set(1, "LKll")
         src.commit()
         let sc = cache.get("k1").getOrThrow().getString(0)
-        let sc1 = cache.get("k1").getOrThrow().edit().getOrThrow()
+        cache.get("k1").getOrThrow().edit().getOrThrow()
         @Assert("OP", sc)
     }
 }
