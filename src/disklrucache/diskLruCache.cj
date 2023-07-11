@@ -397,11 +397,7 @@ public class DiskLruCache {
     protected func completeEdit(editor: Editor, success: Bool): Unit {
         synchronized (lock) {
             let entry = editor.entry
-            if (!refEq(entry.currentEditor.getOrThrow(), editor)) {
-                throw  Exception("editor is others")
-            }
-
-            // If this edit is creating the entry for the first time, every index must have a value.
+            if (!refEq(entry.currentEditor.getOrThrow(), editor)) { throw  Exception("editor is others") }
             if (success && !entry.readable) {
                 for (i in 0..valueCount) {
                     if (!editor.written.getOrThrow()[i]) {
@@ -414,30 +410,23 @@ public class DiskLruCache {
                     }
                 }
             }
-
             for (i in 0..valueCount) {
                 let dirty = entry.getDirtyFile(i)
-                if (success) {
-                    if (File.exists(dirty.info.path.toString())) {
-                        let clean = entry.getCleanFile(i)
-                        File.move(dirty.info.path.toString(),clean.info.path.toString(), true)
-                        let oldLength = entry.lengths[i]
-                        let newLength = FileInfo(clean.info.path.toString()).length
-                        entry.lengths[i] = newLength
-                        size = size - oldLength + newLength
-                    }
-                } else {
-                    deleteIfExists(dirty)
-                }
+                if (success && File.exists(dirty.info.path.toString()) ) {
+                    let clean = entry.getCleanFile(i)
+                    File.move(dirty.info.path.toString(),clean.info.path.toString(), true)
+                    let oldLength = entry.lengths[i]
+                    let newLength = FileInfo(clean.info.path.toString()).length
+                    entry.lengths[i] = newLength
+                    size = size - oldLength + newLength
+                } else if (!success) { deleteIfExists(dirty) }
             }
-
             redundantOpCount++
             entry.currentEditor = None
             var jw = wirteSink(journalWriter)
             if (entry.readable || success) {
                 entry.readable = true
-                jw.write(CLEAN.toUtf8Array())
-                jw.write(" ".toUtf8Array())
+                jw.write((CLEAN + " ").toUtf8Array())
                 jw.write(entry.key.toUtf8Array())
                 jw.write(entry.getLengths().toUtf8Array())
                 jw.write("\n".toUtf8Array())
@@ -447,17 +436,12 @@ public class DiskLruCache {
                 }
             } else {
                 lruEntries.remove(entry.key)
-                jw.write(REMOVE.toUtf8Array())
-                jw.write(" ".toUtf8Array())
+                jw.write((REMOVE + " ").toUtf8Array())
                 jw.write(entry.key.toUtf8Array())
                 jw.write("\n".toUtf8Array())
             }
-
             jw.flush()
-
-            if (size > maxSize || journalRebuildRequired()) {
-                cleanUp()
-            }
+            if (size > maxSize || journalRebuildRequired()) { cleanUp() }
         }
     }
 
