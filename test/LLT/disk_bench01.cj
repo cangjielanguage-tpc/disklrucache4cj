@@ -8,7 +8,7 @@ from std import time.*
 from std import os.posix.*
 from std import unittest.*
 from std import unittest.testmacro.*
-
+from std import math.*
 @Test
 public class LruCacheOpen1Test {
     @TestCase

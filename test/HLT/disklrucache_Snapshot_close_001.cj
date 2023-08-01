@@ -7,7 +7,7 @@ from std import fs.*
 from std import os.posix.*
 from std import unittest.*
 from std import unittest.testmacro.*
-
+from std import math.*
 @Test
 public class disklrucache_Snapshot_close_001 {
     @TestCase

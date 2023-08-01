@@ -8,6 +8,7 @@ from std import fs.*
 from std import os.posix.*
 from std import unittest.*
 from std import unittest.testmacro.*
+from std import math.*
 main() {
 
     let lrucache = LruCacheOpen1Test()
