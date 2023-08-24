@@ -27,7 +27,7 @@ public class disklrucache_Snapshot_getInputStream_001 {
         let file = cache.get("k1").getOrThrow().getInputStream(0)
 
         println("file.info.path :${file.info.path}")
-        @Assert(path+"/disklrucache_Snapshot_getInputStream_001/k1.0", file.info.path.toString())
+        @Assert(Path(path).join("disklrucache_Snapshot_getInputStream_001").join("k1.0").toString().replace("/","\\"), file.info.path.toString().replace("/","\\"))
     }
 }
 
