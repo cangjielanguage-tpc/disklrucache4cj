@@ -713,7 +713,8 @@ public class Editor {
 
 
 public class Snapshot {
-
+    private var buff = StringBuilder()
+    private var buffArr = Array<Byte>(8192, item: 0)
     private var key: String
     private var sequenceNumber: Int64
     private var ins: Array<File>
@@ -742,7 +743,18 @@ public class Snapshot {
     }
 
     public func getString(index: Int64): String {
-      return DiskLruCache.inputStreamToString(getInputStream(index))
+        buff.clear()
+        let file = getInputStream(index)
+        var read = file.read(buffArr)
+        while (read != 0) {
+            if (read != buffArr.size) {
+                buff.append(String.fromUtf8(buffArr[0..read]))
+            } else {
+                buff.append(buffArr)
+            }
+            read = file.read(buffArr)
+        }
+        return buff.toString()
     }
 
     public func getLength(index: Int64): Int64 {
