@@ -5,7 +5,7 @@
 <p align="center">
 <img alt="" src="https://img.shields.io/badge/release-v0.0.2-brightgreen" style="display: inline-block;" />
 <img alt="" src="https://img.shields.io/badge/build-pass-brightgreen" style="display: inline-block;" />
-<img alt="" src="https://img.shields.io/badge/cjc-v0.39.5-brightgreen" style="display: inline-block;" />
+<img alt="" src="https://img.shields.io/badge/cjc-v0.39.7-brightgreen" style="display: inline-block;" />
 <img alt="" src="https://img.shields.io/badge/cjcov-90.3%25-brightgreen" style="display: inline-block;" />
 <img alt="" src="https://img.shields.io/badge/project-open-brightgreen" style="display: inline-block;" />
 </p>
@@ -70,9 +70,25 @@ DiskLruCache 是一个管理硬盘内容的存储管理工具，它采用了最�
 
 ### 编译
 
-```shell
-cpm build
-```
+1. 本项目编译运行方式
+
+-  引入 testJekins 包
+
+    ```
+    git clone https://gitee.com/HW-PLLab/testJekins
+    ```
+
+    将 src 下 ci_test 放入 diskLruCache4cj 根目录下,执行：
+
+    ```
+    cjpm clean
+    cjpm update
+    python3 ci_test/main.py build    ---> 编译
+    python3 ci_test/main.py test     ---> 执行 test/LLT 用例
+    ```
+    test/LLT 用例书写参考：https://gitee.com/HW-PLLab/cangjie-library-pages/wikis 的门禁测试脚本使用方式
+
+- 重复本项目编译运行方式的第二步
 
 ### 功能示例
 #### 数据写入硬盘缓存中 功能示例
