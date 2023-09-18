@@ -25,9 +25,9 @@ public class DiskLruCache {
 
 
     protected var directory: Directory
-    private var journalFile: File
-    private var journalFileTmp: File
-    private var journalFileBackup: File
+    private var journalFile: Path
+    private var journalFileTmp: Path
+    private var journalFileBackup: Path
     private var appVersion: Int64
     private var maxSize: Int64
     protected var valueCount: Int64
@@ -42,21 +42,9 @@ public class DiskLruCache {
     private init(directory: Directory, appVersion: Int64, valueCount: Int64, maxSize: Int64) {
         this.directory = directory
         this.appVersion = appVersion
-        if(File.exists(directory.info.path.join(JOURNAL_FILE))) {
-            this.journalFile = File(directory.info.path.join(JOURNAL_FILE), Open(true,true))
-        } else {
-            this.journalFile = File(directory.info.path.join(JOURNAL_FILE), Create(true))
-        }
-        if(File.exists(directory.info.path.join(JOURNAL_FILE_TEMP))) {
-            this.journalFileTmp = File(directory.info.path.join(JOURNAL_FILE_TEMP), Open(true,true))
-        } else {
-            this.journalFileTmp = File(directory.info.path.join(JOURNAL_FILE_TEMP), Create(true))
-        }
-        if(File.exists(directory.info.path.join(JOURNAL_FILE_BACKUP))) {
-            this.journalFileBackup = File(directory.info.path.join(JOURNAL_FILE_BACKUP), Open(true,true))
-        } else {
-            this.journalFileBackup = File(directory.info.path.join(JOURNAL_FILE_BACKUP), Create(true))
-        }
+        this.journalFile = directory.info.path.join(JOURNAL_FILE)
+        this.journalFileTmp = directory.info.path.join(JOURNAL_FILE_TEMP)
+        this.journalFileBackup = directory.info.path.join(JOURNAL_FILE_BACKUP)
         this.valueCount = valueCount
         this.maxSize = maxSize
 
@@ -71,32 +59,32 @@ public class DiskLruCache {
         }
 
         // If a bkp file exists, use it instead.
-        if (File.exists(directory.info.path.join(JOURNAL_FILE_BACKUP).toString())) {
-            var backupFile = File(directory.info.path.join(JOURNAL_FILE_BACKUP), Open(true, true))
+        var backupFile = directory.info.path.join(JOURNAL_FILE_BACKUP)
+        if (File.exists(backupFile)) {
+            var journalFile = directory.info.path.join(JOURNAL_FILE)
             // If journal file also exists just delete backup file.
-            if (File.exists(directory.info.path.join(JOURNAL_FILE).toString())) {
-                File(directory.info.path.join(JOURNAL_FILE), Open(true, true))
-                File.delete(backupFile.info.path.toString())
+            if (File.exists(journalFile)) {
+                File.delete(backupFile)
             } else {
-                renameToes(directory.info.path.join(JOURNAL_FILE_BACKUP).toString(), directory.info.path.join(JOURNAL_FILE).toString())
+                renameTo(backupFile, journalFile, true)
             }
         }
 
         // Prefer to pick up where we left off.
         var cache: DiskLruCache = DiskLruCache(directory, appVersion, valueCount, maxSize)
-        if (File.exists(directory.info.path.join(JOURNAL_FILE).toString())) {
-            var journalFile = File(directory.info.path.join(JOURNAL_FILE), Open(true, true))
-            if (journalFile.length != 0 ) {
+        if (File.exists(cache.journalFile)) {
+
+            //if (cache.journalFile.length != 0 ) {
                 try {
                     cache.readJournal()
                     cache.processJournal()  
-                    cache.journalWriter = ReallBufferSink(FileSink(File(cache.journalFile.info.path.toString(), Append)))
+                    cache.journalWriter = ReallBufferSink(FileSink(File(cache.journalFile, Append)))
                     return cache
                 } catch (e: Exception) {
                     println("DiskLruCache ${directory.info.path.toString()} is corrupt: ${e.toString()}, removing")
                     cache.delete()
                 }
-            }
+           // }
             
         }
 
@@ -151,7 +139,7 @@ public class DiskLruCache {
                     }
                     for (i in 0..valueCount) {
                         let file = k.getCleanFile(i)
-                        deleteIfExists(file)
+                        deleteIfExists(file.info.path)
                         size -= k.lengths[i]
                         k.lengths[i] = 0
                     }
@@ -190,8 +178,8 @@ public class DiskLruCache {
                 case Some(_) =>
                     entry.currentEditor = None
                     for (i in 0..valueCount) {
-                        deleteIfExists(entry.getCleanFile(i))
-                        deleteIfExists(entry.getDirtyFile(i))
+                        deleteIfExists(entry.getCleanFile(i).info.path)
+                        deleteIfExists(entry.getDirtyFile(i).info.path)
                     }
                     str.append(key)
             }
@@ -207,13 +195,14 @@ public class DiskLruCache {
                 case Some(s) =>
                     s.close()
             }
-            if(File.exists(journalFileTmp.info.path.toString())) {
-                this.journalFileTmp = File(directory.info.path.join(JOURNAL_FILE_TEMP), Open(true,true))
+            
+            var filejournals: File
+            if (File.exists(journalFileTmp)) {
+                filejournals = File(journalFileTmp, Open(true,true))
             } else {
-                this.journalFileTmp = File(directory.info.path.join(JOURNAL_FILE_TEMP), Create(true))
+                filejournals = File(journalFileTmp, Create(true))
             }
-            var writer = ReallBufferSink(FileSink(journalFileTmp))
-
+            var writer = ReallBufferSink(FileSink(filejournals))
             try {
                 writer.write(MAGIC.toUtf8Array())
                 writer.write("\n".toUtf8Array())
@@ -240,17 +229,19 @@ public class DiskLruCache {
             } finally {
                 writer.close()
             }
-            if (File.exists(journalFile.info.path.toString())) {
+            if (File.exists(journalFile)) {
                 renameTo(journalFile, journalFileBackup, true);
-            }
+            }  
             renameTo(journalFileTmp, journalFile, false);
-            File.delete(journalFileBackup.info.path.toString())
-            journalWriter = ReallBufferSink(FileSink(File(journalFile.info.path.toString(), Append)))
+            if (File.exists(journalFileBackup)) {
+                File.delete(journalFileBackup)
+            }   
+            journalWriter = ReallBufferSink(FileSink(File(journalFile, Append)))
         }
     }
 
     private func readJournal(): Unit {
-        var reader: StrictLineReader =  StrictLineReader(journalFile, Util.US_ASCII)
+        var reader: StrictLineReader =  StrictLineReader(File(journalFile, Open(true,true)), Util.US_ASCII)
 
         try {
             let magic = reader.readLine()
@@ -327,10 +318,10 @@ public class DiskLruCache {
         }
     }
 
-    private static func deleteIfExists(file: File): Unit {
-        if (File.exists(file.info.path.toString())) {
+    private static func deleteIfExists(file: Path): Unit {
+        if (File.exists(file)) {
             try {
-                File.delete(file.info.path.toString())
+                File.delete(file)
             }catch (e: Exception){
                 throw Exception("failed to delete ")
             }  
@@ -338,16 +329,12 @@ public class DiskLruCache {
         }
     }
 
-    private static func renameTo(fo: File, to: File, deleteDestination: Bool): Unit {
+    private static func renameTo(fo: Path, to: Path, deleteDestination: Bool): Unit {
         if (deleteDestination) {
             deleteIfExists(to)
         }
-        File.move(fo.info.path.toString(),to.info.path.toString(), true)
+        File.move(fo,to, true)
 
-    }
-
-    private static func renameToes(fo: String, to: String): Unit {
-        File.move(fo,to,true)
     }
 
     private func cleanUp(): Unit {
@@ -419,7 +406,7 @@ public class DiskLruCache {
                     let newLength = FileInfo(clean.info.path.toString()).length
                     entry.lengths[i] = newLength
                     size = size - oldLength + newLength
-                } else if (!success) { deleteIfExists(dirty) }
+                } else if (!success) { deleteIfExists(dirty.info.path) }
             }
             redundantOpCount++
             entry.currentEditor = None
