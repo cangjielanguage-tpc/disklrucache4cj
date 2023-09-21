@@ -151,8 +151,8 @@ public class Editor {
 
 ```cangjie
 from disklrucache import disklrucache.*
-from std import io.*
 from std import fs.*
+from std import math.*
 from std import os.posix.*
 from std import unittest.*
 from std import unittest.testmacro.*
@@ -254,8 +254,8 @@ public class Snapshot {
 
 ```cangjie
 from disklrucache import disklrucache.*
-from std import io.*
 from std import fs.*
+from std import math.*
 from std import os.posix.*
 from std import unittest.*
 from std import unittest.testmacro.*
@@ -318,8 +318,8 @@ public class DiskLruCache {
 
 ```cangjie
 from disklrucache import disklrucache.*
-from std import io.*
 from std import fs.*
+from std import math.*
 from std import os.posix.*
 from std import unittest.*
 from std import unittest.testmacro.*
@@ -339,13 +339,13 @@ public class LruCacheOpen1Test {
         var path: String = getcwd()
         var TmpDir = path + "/DiskLruCacheTest"
         let appVersion = 100
-        var cacheDir = Directory(TmpDir) 
+        var cacheDir = Directory.create(TmpDir) 
         var cache = DiskLruCache.open(cacheDir, appVersion, 2, Int64(Int32.Max))
         let key = "k1"
         let src = cache.edit(key).getOrThrow()
         src.set(0, "ABC")
         src.set(1, "DE")
-        let pc = src.getString(0).isEmpty()
+        src.getString(0).isEmpty()
         src.commit()
         let cq = cache.remove("k1")
         println("success")
@@ -380,8 +380,8 @@ public class DiskLruCache {
 
 ```cangjie
 from disklrucache import disklrucache.*
-from std import io.*
 from std import fs.*
+from std import math.*
 from std import os.posix.*
 from std import unittest.*
 from std import unittest.testmacro.*
@@ -403,8 +403,8 @@ public class LruCacheOpen1Test {
         let appVersion = 100
         var cacheDir = Directory.create(TmpDir)
         var cache = DiskLruCache.open(cacheDir, appVersion, 2, Int64(Int32.Max))
-        let src = cache.close()
-        let src1 = cache.isClosed()
+        cache.close()
+        cache.isClosed()
         println("success")
         @Assert(true, cache.isClosed())
 
