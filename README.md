@@ -72,25 +72,18 @@ DiskLruCache 是一个管理硬盘内容的存储管理工具，它采用了最�
 
 #### linux环境编译
 
-```
-git clone https://gitee.com/HW-PLLab/disklrucache4cj.git
-```
-```
-cd disklrucache4cj
-cjpm build -V   ---> 编译
-cjpm test - V   ---> 执行 test/LLT 用例 
+编译描述和具体shell命令
+
+```shell
+cjpm build
 ```
 
 #### Window环境编译
 
-```
-git clone https://gitee.com/HW-PLLab/disklrucache4cj.git
-```
+编译描述和具体cmd命令
 
-```
-cd disklrucache4cj
-cjpm build -V   ---> 编译
-cjpm test - V   ---> 执行 test/LLT 用例 
+```cmd
+cjpm build
 ```
 
 ### 功能示例
@@ -99,8 +92,8 @@ cjpm test - V   ---> 执行 test/LLT 用例
 
 ```cangjie
 from disklrucache import disklrucache.*
-from std import io.*
 from std import fs.*
+from std import math.*
 from std import os.posix.*
 from std import unittest.*
 from std import unittest.testmacro.*
@@ -144,8 +137,8 @@ success
 
 ```cangjie
 from disklrucache import disklrucache.*
-from std import io.*
 from std import fs.*
+from std import math.*
 from std import os.posix.*
 from std import unittest.*
 from std import unittest.testmacro.*
@@ -189,8 +182,8 @@ success
 
 ```cangjie
 from disklrucache import disklrucache.*
-from std import io.*
 from std import fs.*
+from std import math.*
 from std import os.posix.*
 from std import unittest.*
 from std import unittest.testmacro.*
@@ -210,13 +203,13 @@ public class LruCacheOpen1Test {
         var path: String = getcwd()
         var TmpDir = path + "/DiskLruCacheTest"
         let appVersion = 100
-        var cacheDir = Directory(TmpDir) 
+        var cacheDir = Directory.create(TmpDir) 
         var cache = DiskLruCache.open(cacheDir, appVersion, 2, Int64(Int32.Max))
         let key = "k1"
         let src = cache.edit(key).getOrThrow()
         src.set(0, "ABC")
         src.set(1, "DE")
-        let pc = src.getString(0).isEmpty()
+        src.getString(0).isEmpty()
         src.commit()
         let cq = cache.remove("k1")
         println("success")
@@ -235,8 +228,8 @@ success
 
 ```cangjie
 from disklrucache import disklrucache.*
-from std import io.*
 from std import fs.*
+from std import math.*
 from std import os.posix.*
 from std import unittest.*
 from std import unittest.testmacro.*
@@ -258,8 +251,8 @@ public class LruCacheOpen1Test {
         let appVersion = 100
         var cacheDir = Directory.create(TmpDir)
         var cache = DiskLruCache.open(cacheDir, appVersion, 2, Int64(Int32.Max))
-        let src = cache.close()
-        let src1 = cache.isClosed()
+        cache.close()
+        cache.isClosed()
         println("success")
         @Assert(true, cache.isClosed())
 
