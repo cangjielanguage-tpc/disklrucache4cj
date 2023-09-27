@@ -92,5 +92,9 @@ class StrictLineReader {
         this.pos = 0
         this.end = resu
     }
+
+    protected func close(): Unit {
+        (this.input as Resource)?.close()
+    }
 }
 
