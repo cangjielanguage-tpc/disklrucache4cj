@@ -139,6 +139,7 @@ public class DiskLruCache {
                     }
                     for (i in 0..valueCount) {
                         let file = k.getCleanFile(i)
+                        file.close()
                         deleteIfExists(file.info.path)
                         size -= k.lengths[i]
                         k.lengths[i] = 0
@@ -178,8 +179,12 @@ public class DiskLruCache {
                 case Some(_) =>
                     entry.currentEditor = None
                     for (i in 0..valueCount) {
-                        deleteIfExists(entry.getCleanFile(i).info.path)
-                        deleteIfExists(entry.getDirtyFile(i).info.path)
+                        let cleanfiles = entry.getCleanFile(i)
+                        cleanfiles.close()
+                        let dirtyfiles = entry.getDirtyFile(i)
+                        dirtyfiles.close()
+                        deleteIfExists(cleanfiles.info.path)
+                        deleteIfExists(dirtyfiles.info.path)
                     }
                     str.append(key)
             }
@@ -266,7 +271,7 @@ public class DiskLruCache {
             }
             redundantOpCount = lineCount - lruEntries.size
         } finally {
-            
+            reader.close()
         }
     }
 
@@ -404,6 +409,7 @@ public class DiskLruCache {
                     File.move(dirty.info.path.toString(),clean.info.path.toString(), true)
                     let oldLength = entry.lengths[i]
                     let newLength = FileInfo(clean.info.path.toString()).length
+                    clean.close()
                     entry.lengths[i] = newLength
                     size = size - oldLength + newLength
                 } else if (!success) { deleteIfExists(dirty.info.path) }
@@ -741,6 +747,7 @@ public class Snapshot {
             }
             read = file.read(buffArr)
         }
+        file.close()
         return buff.toString()
     }
 
