@@ -747,7 +747,6 @@ public class Snapshot {
             }
             read = file.read(buffArr)
         }
-        file.close()
         return buff.toString()
     }
 
