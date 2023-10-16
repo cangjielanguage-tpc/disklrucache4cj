@@ -29,10 +29,10 @@ public class disklrucache_Snapshot_close_001 {
         var strMsg = ""
         try {
             Snapshot.getInputStream(0)
-        }catch(e: Exception) {
+        }catch(e: DiskLruCacheException) {
             println("e.message :${e.message}")
             strMsg = e.message 
         }
-        @Assert("Stream Closed", strMsg)
+        @Assert("stream closed", strMsg)
     }
 }

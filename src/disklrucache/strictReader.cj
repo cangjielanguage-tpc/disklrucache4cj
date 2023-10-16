@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) Cangjie Library Team 2023-2023. All rights reserved.
+ * Description:
+ */
 package disklrucache
 
 from std import io.*
@@ -28,10 +32,10 @@ class StrictLineReader {
 
     public init(input: InputStream, capacity: Int64, charset: Charset) {
         if (capacity <  0) {
-            throw Exception("capacity <= 0")
+            throw DiskLruCacheException("the capacity of strictLineReader cannot be negative")
         }
         if (!(charset.nameEquals("ISO-8859-2"))) {
-            throw IllegalArgumentException("Unsupported encoding")
+            throw DiskLruCacheException("unsupported encoding")
         }
         this.input = input
         this.charset = charset
@@ -41,7 +45,7 @@ class StrictLineReader {
     public func readLine(): String {
         synchronized (lock) {
             if (buf.isEmpty()) {
-                throw Exception("LineReader is closed")
+                throw DiskLruCacheException("lineReader is closed")
             }
 
             if (pos >= end) {
@@ -87,7 +91,7 @@ class StrictLineReader {
     private func fillBuf(): Unit {
         let resu = this.input.read(buf)
         if (resu == 0) {
-            throw Exception()
+            throw DiskLruCacheException("no data readable")
         }
         this.pos = 0
         this.end = resu

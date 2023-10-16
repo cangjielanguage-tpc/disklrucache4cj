@@ -31,7 +31,7 @@ public class LruCacheOpen1Test {
         var inps = false
         try {
             src.commit()
-        }catch(e: Exception) {
+        }catch(e: NoneValueException) {
             inps = true      
         }
         println(TmpDir)   

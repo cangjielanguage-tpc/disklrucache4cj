@@ -68,22 +68,66 @@ DiskLruCache 是一个管理硬盘内容的存储管理工具，它采用了最�
 
 ## 使用说明
 
-### 编译
+### 编译构建
 
-#### linux环境编译
-
-编译描述和具体shell命令
+#### 1. disklrucache4cj 目录下进行编译
 
 ```shell
+cjpm update
 cjpm build
 ```
 
-#### Window环境编译
+### 执行用例
+编译用例并执行，步骤如下：
 
-编译描述和具体cmd命令
+#### 1. 进入 disklrucache4cj/test/ 目录下创建 tmp 文件夹，然后编译测试用例
+```shell
+cd disklrucache4cj/test/
+mkdir tmp
+cjc -O2 --import-path xxxxx/disklrucache4cj/build/ -L xxxxx/disklrucache4cj/build/disklrucache  -l disklrucache_disklrucache  -L xxxxx/disklrucache4cj/build/charset -l charset_charset.encoding -l charset_charset.simplechinese -l charset_charset.singlebyte -l charset_charset.korean -l charset_charset -l charset_charset.japanese -l charset_charset.unicode -l charset_charset.traditionchinese -l disklrucache_disklrucache -l charset_charset.encoding -l charset_charset.simplechinese -l charset_charset.singlebyte -l charset_charset.korean -l charset_charset -l charset_charset.japanese -l charset_charset.unicode -l charset_charset.traditionchinese -l charset_charset.encoding -l charset_charset.simplechinese -l charset_charset.singlebyte -l charset_charset.korean -l charset_charset -l charset_charset.japanese -l charset_charset.unicode -l charset_charset.traditionchinese  test/LLT/test.cj -o tmp/test.cj.out --test
+```
 
-```cmd
-cjpm build
+##### 1.1 具体说明
+
+- cjc命令, -O2表示开启优化
+```shell
+cjc -O2
+```
+- --import-path 导入disklrucache4cj库编译出来的库文件地址, 注意地址最后有"."
+- -L 导入库文件的完整路径
+- 导入多个库,每个库都需要--import-path和 -L
+
+```shell
+--import-path xxxxx/disklrucache4cj/build/ -L xxxxx/disklrucache4cj/build/disklrucache -l disklrucache_disklrucache
+```
+- -l 要导入的具体的包, 用"库名_包名"
+- 导入一个库中有多个包时,用多个 -l
+```shell
+--import-path xxxxx/disklrucache4cj/build/ -L xxxxx/disklrucache4cj/build/charset -l charset_charset.encoding -l charset_charset.simplechinese -l charset_charset.singlebyte -l charset_charset.korean -l charset_charset -l charset_charset.japanese -l charset_charset.unicode -l charset_charset.traditionchinese -l disklrucache_disklrucache -l charset_charset.encoding -l charset_charset.simplechinese -l charset_charset.singlebyte -l charset_charset.korean -l charset_charset -l charset_charset.japanese -l charset_charset.unicode -l charset_charset.traditionchinese -l charset_charset.encoding -l charset_charset.simplechinese -l charset_charset.singlebyte -l charset_charset.korean -l charset_charset -l charset_charset.japanese -l charset_charset.unicode -l charset_charset.traditionchinese
+```
+
+- 测试用例的完整路径和用例中引入文件的完整路径
+- -o 用例编译后输出的位置和名称, .out结尾, 一般使用"用例名称.out"
+- --test 用例编译命令结尾
+```shell
+xxxxx/disklrucache4cj/test/LLT/test.cj  -o xxxxx/disklrucache4cj/test/tmp/test.cj.out --test
+```
+
+#### 2. 把编译好的文件复制到 .out 文件下(disklrucache4cj/test/tmp/) 
+- disklrucache4cj/build/disklrucache/、disklrucache4cj/build/charset/ 目录中的文件都复制到 .out 文件位置(disklrucache4cj/test/tmp/ 中)
+
+#### 3. 进入到.out文件位置，执行用例
+- 进入到.out文件位置执行用例
+```shell
+cd xxxxx/disklrucache4cj/test/tmp/
+```
+- windows系统打开cmd,输入.out文件完整名称即可执行
+```shell
+test.cj.out
+```
+- Linux系统使用 ./.out文件完整名称
+```shell
+./test.cj.out
 ```
 
 ### 功能示例

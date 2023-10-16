@@ -35,7 +35,7 @@ public class LruCacheOpen1Test {
         var inps = -1
         try {
             sc.getInputStream(0)
-        }catch(e: Exception) {
+        }catch(e: DiskLruCacheException) {
             inps = 1      
         }
         @Assert(1, inps)

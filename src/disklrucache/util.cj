@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) Cangjie Library Team 2023-2023. All rights reserved.
+ * Description:
+ */
 package disklrucache
 
 from std import io.*
@@ -19,7 +23,7 @@ class Util {
     static func deleteContents(dir: Directory): Unit {
         var files = dir.entryList()
         if (files.isEmpty()) {
-            throw Exception("not a readable directory")
+            throw DiskLruCacheException("not a readable directory")
         }
         for (fil in files) {
             if (fil.isDirectory()) {
@@ -52,7 +56,7 @@ class ReallBufferSink <: Sink {
 
     public func write(bytes: Array<Byte>): Unit {
         if (closed) {
-            throw Exception("closed")
+            throw DiskLruCacheException("closed")
         } else {
             buf.write(bytes)
         }
@@ -60,7 +64,7 @@ class ReallBufferSink <: Sink {
 
     public func flush(): Unit {
         if (closed) {
-            throw Exception("closed");
+            throw DiskLruCacheException("closed");
         } else {
             if (this.buf.length > 0) {
                 this.sink.write(this.buf.readToEnd())

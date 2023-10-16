@@ -33,7 +33,7 @@ public class LruCacheOpen1Test {
             es = e.toString()
         }
         println(es)
-        @Assert("Exception: Newly created entry didn't create value for index 0", es)    
+        @Assert("DiskLruCacheException: newly created entry didn't create value for index 0", es)    
     }
 }
 
