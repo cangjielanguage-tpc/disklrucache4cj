@@ -9,3 +9,5 @@
 *.gcno
 /output
 /charset/
+.cjpm-history
+module-lock.json

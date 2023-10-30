@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) Cangjie Library Team 2023-2023. All rights reserved.
+ * Description:
+ */
 package disklrucache
 
 from std import io.*
@@ -52,10 +56,10 @@ public class DiskLruCache {
 
     public static func open(directory: Directory, appVersion: Int64, valueCount: Int64, maxSize: Int64): DiskLruCache {
         if (maxSize <= 0) {
-            throw IllegalArgumentException("maxSize <= 0")
+            throw DiskLruCacheException("the max size of cache cannot be negative")
         }
         if (valueCount <= 0) {
-            throw IllegalArgumentException("valueCount <= 0")
+            throw DiskLruCacheException("the number of values per cache entry cannot be negative")
         }
 
         // If a bkp file exists, use it instead.
@@ -74,17 +78,14 @@ public class DiskLruCache {
         var cache: DiskLruCache = DiskLruCache(directory, appVersion, valueCount, maxSize)
         if (File.exists(cache.journalFile)) {
 
-            //if (cache.journalFile.length != 0 ) {
                 try {
                     cache.readJournal()
                     cache.processJournal()  
                     cache.journalWriter = ReallBufferSink(FileSink(File(cache.journalFile, Append)))
                     return cache
                 } catch (e: Exception) {
-                    println("DiskLruCache ${directory.info.path.toString()} is corrupt: ${e.toString()}, removing")
                     cache.delete()
                 }
-           // }
             
         }
 
@@ -256,7 +257,7 @@ public class DiskLruCache {
             let blank = reader.readLine()
             if (!MAGIC.equals(magic) || !VERSION_1.equals(version) || !("${appVersion}").equals(appVersionString) || !("${valueCount}").equals(valueCountString) || !"".equals(blank)) {
                 
-                throw Exception("unexpected journal header: [${magic}, ${version}, ${valueCountString}, ${blank}]")
+                throw DiskLruCacheException("unexpected journal header: [${magic}, ${version}, ${valueCountString}, ${blank}]")
             }
 
             var lineCount = 0
@@ -280,7 +281,7 @@ public class DiskLruCache {
         try {
             firstSpace = line.indexOf(' ').getOrThrow()
         } catch (e: Exception) {
-            throw Exception("unexpected journal line: ${line}")
+            throw DiskLruCacheException("unexpected journal line: ${line}")
         }
         let keyBegin = firstSpace + 1
         var key: String = ""
@@ -319,7 +320,7 @@ public class DiskLruCache {
         } else if (secondSpace == -1 && firstSpace == READ.size && line.startsWith(READ)) {
           
         } else {
-            throw Exception("unexpected journal line: ${line}")
+            throw DiskLruCacheException("unexpected journal line: ${line}")
         }
     }
 
@@ -328,7 +329,7 @@ public class DiskLruCache {
             try {
                 File.delete(file)
             }catch (e: Exception){
-                throw Exception("failed to delete ")
+                throw DiskLruCacheException("failed to delete ")
             }  
             
         }
@@ -361,7 +362,7 @@ public class DiskLruCache {
 
         match (matcher) {
             case Some(_) => ()
-            case None => throw IllegalArgumentException("keys must match regex [a-z0-9_-]{1,64}: \"" + "${key}" + "\"")
+            case None => throw DiskLruCacheException("keys must match regex [a-z0-9_-]{1,64}: \"" + "${key}" + "\"")
         }
 
     }
@@ -376,7 +377,7 @@ public class DiskLruCache {
 
     public func setMaxSize(maxSize: Int64): Unit {
         if (maxSize <= 0) {
-            throw IllegalArgumentException("invalid cache size: ${maxSize}")
+            throw DiskLruCacheException("invalid cache size: ${maxSize}")
         }
         this.maxSize = maxSize
         cleanUp()
@@ -394,7 +395,7 @@ public class DiskLruCache {
                 for (i in 0..valueCount) {
                     if (!editor.written.getOrThrow()[i]) {
                         editor.abort()
-                        throw Exception("Newly created entry didn't create value for index ${i}")
+                        throw DiskLruCacheException("newly created entry didn't create value for index ${i}")
                     }
                     if (!File.exists(entry.getDirtyFile(i).info.path.toString())) {
                         editor.abort()
@@ -456,7 +457,7 @@ public class DiskLruCache {
         match (journalWriter) {
             case Some(_) => ()
             case None => 
-                throw Exception("cache is closed")
+                throw DiskLruCacheException("cache is closed")
         }
     }
 
@@ -580,7 +581,7 @@ class Entry {
 
     public func setLengths(strings: Array<String>): Unit {
         if (strings.size != disk.valueCount) {
-            throw Exception("unexpected journal line: ${strings.toString()}" )
+            throw DiskLruCacheException("unexpected journal line: ${strings.toString()}" )
         }
         
         try {
@@ -588,7 +589,7 @@ class Entry {
                 lengths[i] = Int64.parse(strings[i])
             }
         } catch (e: Exception) {
-            throw Exception("unexpected journal line: ${strings.toString()}" )
+            throw DiskLruCacheException("unexpected journal line: ${strings.toString()}" )
         }
     }
 
@@ -634,7 +635,7 @@ public class Editor {
     public func newInputStream(index: Int64): Option<InputStream> {
         synchronized (disk.lock) {
             if(!refEq(entry.currentEditor.getOrThrow(), this)) {
-                throw Exception()
+                throw DiskLruCacheException("editor object inconsistency")
             }
             if (!entry.readable) {
                 return Option<InputStream>.None
@@ -661,7 +662,7 @@ public class Editor {
     public func newOutputStream(index: Int64): File {
         synchronized(disk.lock) {
             if(!refEq(entry.currentEditor.getOrThrow(), this)) {
-                throw Exception()
+                throw DiskLruCacheException("editor object inconsistency")
             }
             if (!entry.readable) {
                 let writtense = written.getOrThrow()
@@ -729,7 +730,7 @@ public class Snapshot {
 
     public func getInputStream(index: Int64): File {
         if (isClosed) {
-            throw Exception("Stream Closed")
+            throw DiskLruCacheException("stream closed")
         }
         let src = ins.get(index).getOrThrow()
         return src
@@ -761,4 +762,23 @@ public class Snapshot {
         }
     }
 
+}
+
+public class DiskLruCacheException <: Exception {
+    private var messages: String = ""
+    public init() {
+        super()
+    }
+
+    public init(messages: String) {
+        super(messages)
+        this.messages = messages
+    }
+
+    public func getMessage(): String {
+        return messages
+    }
+    public override func toString(): String {
+        return "DiskLruCacheException: ${messages}"
+    }
 }

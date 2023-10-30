@@ -33,12 +33,14 @@ public class DiskLruCache {
      * 参数 appVersion - 缓存版本
      * 参数 valueCount - 算每个缓存项的值
      * 参数 maxSize - 存储的最大字节数
+     * 异常 DiskLruCacheException 如果maxSize和valueCount为小于等于零时抛出
      * 返回值 DiskLruCache - 返回缓存的对象
      */
     public static func open(directory: Directory, appVersion: Int64, valueCount: Int64, maxSize: Int64): DiskLruCache
 
     /**
      * 关闭缓存并删除其所有存储的值
+     * 异常 DiskLruCacheException 当directory缓存目录不存在时，抛出异常
      */
     public func delete(): Unit
 
@@ -65,6 +67,7 @@ public class DiskLruCache {
      * 更改缓存可以存储的最大字节数
      * 
      * 参数 maxSize - 最大字节数
+     * 异常 DiskLruCacheException 当 maxSize 小于等于零时，抛出异常
      */
     public func setMaxSize(maxSize: Int64): Unit
 
@@ -84,6 +87,7 @@ public class DiskLruCache {
 
     /**
      * 对文件系统执行缓冲操作
+     * 异常 DiskLruCacheException 当调用close()方法后使用时，抛出异常
      */
     public func flush(): Unit
 
@@ -92,6 +96,7 @@ public class DiskLruCache {
      * 
      * 参数 key - 缓存文件的标记
      * 返回值 Option<Editor>
+     * 异常 DiskLruCacheException 当调用close()方法后使用时,当key不符合正则匹配("[a-z0-9_-]{1,64}")，抛出异常
      */
     public func edit(key: String): Option<Editor>
 
@@ -144,6 +149,33 @@ public class Editor {
      * 进行终止
      */
     public func abortUnlessCommitted(): Unit 
+}
+public class DiskLruCacheException <: Exception {
+    /**
+     * 异常初始化
+     */
+    public init()
+
+    /**
+     * 异常初始化
+     *
+     * 参数 messages - 异常信息
+     */
+    public init(messages: String)
+
+    /**
+     * 获取异常信息
+     *
+     * 返回值 String - 异常信息
+     */
+    public func getMessage(): String
+
+    /**
+     * 异常信息转换为 String 类型
+     *
+     * 返回值 String
+     */
+    public override func toString(): String
 }
 ```
 
@@ -224,6 +256,7 @@ public class Snapshot {
      * 
      * 参数 index - 缓存文件的设置的标记值
      * 返回值 File - 缓存的文件对象
+     * 异常 DiskLruCacheException 当调用close()方法后使用时，抛出异常
      */
      public func getInputStream(index: Int64): File
 
@@ -232,6 +265,7 @@ public class Snapshot {
      * 
      * 参数 index - 缓存文件的设置的标记值
      * 返回值 String - 存储的值
+     * 异常 DiskLruCacheException 当调用close()方法后使用时，抛出异常
      */
     public func getString(index: Int64): String
 
@@ -240,6 +274,7 @@ public class Snapshot {
      * 
      * 参数 index - 缓存文件的设置的标记值
      * 返回值 Int64 - 缓存数据的长度
+     * 异常 IndexOutOfBoundsException 当index不是存储的下标时，抛出异常
      */
     public func getLength(index: Int64): Int64
 
@@ -308,6 +343,7 @@ public class DiskLruCache {
      * 
      * 参数 key - 缓存文件的标记值
      * 返回值 Bool - 是否删除成功
+     * 异常 DiskLruCacheException 当调用close()方法后使用时，抛出异常
      */
     public func remove(key: String): Bool
 

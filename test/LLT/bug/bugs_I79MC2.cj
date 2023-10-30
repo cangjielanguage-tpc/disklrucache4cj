@@ -28,7 +28,7 @@ public class LruCacheOpenTest {
         var input = false
         try {
             cache.setMaxSize(-5)
-        } catch (e: IllegalArgumentException) {
+        } catch (e: DiskLruCacheException) {
             input = true
         }
         @Assert(true, input)
