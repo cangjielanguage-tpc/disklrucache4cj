@@ -15,7 +15,7 @@ class Util {
     static let UTF_8: Charset = Charsets.UTF8
 
 
-    static func readFully(ins: StringReader): String {
+    static func readFully(ins: StringReader<InputStream>): String {
         var str: String = ins.readToEnd()
         return str
     }

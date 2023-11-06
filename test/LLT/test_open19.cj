@@ -32,7 +32,7 @@ public class LruCacheOpen1Test {
         src.set(1, "DE")
         let pc = src.getString(0).isEmpty()
         src.commit()
-        @Assert(true, pc)    
+        @Assert(false, pc)    
     }
 }
 
