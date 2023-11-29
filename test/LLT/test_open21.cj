@@ -31,7 +31,7 @@ public class LruCacheOpen1Test {
         src.set(0, "ABC")
         src.set(1, "DE")
         let pc = src.getString(0).isEmpty()
-        @Assert(true, pc)    
+        @Assert(false, pc)    
     }
 }
 

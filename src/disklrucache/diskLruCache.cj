@@ -147,10 +147,10 @@ public class DiskLruCache {
                     }
                     redundantOpCount++
                     var jw = wirteSink(journalWriter)
-                    jw.write(REMOVE.toUtf8Array())
-                    jw.write(" ".toUtf8Array())
-                    jw.write(key.toUtf8Array())
-                    jw.write("\n".toUtf8Array())
+                    jw.write(REMOVE.toArray())
+                    jw.write(" ".toArray())
+                    jw.write(key.toArray())
+                    jw.write("\n".toArray())
                     lruEntries.remove(key)
 
                     if (journalRebuildRequired()) {
@@ -210,26 +210,26 @@ public class DiskLruCache {
             }
             var writer = ReallBufferSink(FileSink(filejournals))
             try {
-                writer.write(MAGIC.toUtf8Array())
-                writer.write("\n".toUtf8Array())
-                writer.write(VERSION_1.toUtf8Array())
-                writer.write("\n".toUtf8Array())
-                writer.write("${appVersion}".toUtf8Array())
-                writer.write("\n".toUtf8Array())
-                writer.write("${valueCount}".toUtf8Array())
-                writer.write("\n".toUtf8Array())
-                writer.write("\n".toUtf8Array())
+                writer.write(MAGIC.toArray())
+                writer.write("\n".toArray())
+                writer.write(VERSION_1.toArray())
+                writer.write("\n".toArray())
+                writer.write("${appVersion}".toArray())
+                writer.write("\n".toArray())
+                writer.write("${valueCount}".toArray())
+                writer.write("\n".toArray())
+                writer.write("\n".toArray())
                 for (entry in lruEntries.values()) {
                     match (entry.currentEditor) {
                         case Some(_) =>
-                            writer.write((DIRTY+ " ").toUtf8Array())
-                            writer.write(entry.key.toUtf8Array())
-                            writer.write("\n".toUtf8Array())
+                            writer.write((DIRTY+ " ").toArray())
+                            writer.write(entry.key.toArray())
+                            writer.write("\n".toArray())
                         case None =>
-                            writer.write((CLEAN+ " ").toUtf8Array())
-                            writer.write(entry.key.toUtf8Array())
-                            writer.write(entry.getLengths().toUtf8Array())
-                            writer.write("\n".toUtf8Array())
+                            writer.write((CLEAN+ " ").toArray())
+                            writer.write(entry.key.toArray())
+                            writer.write(entry.getLengths().toArray())
+                            writer.write("\n".toArray())
                     }
                 }
             } finally {
@@ -255,7 +255,7 @@ public class DiskLruCache {
             let appVersionString = reader.readLine()
             let valueCountString = reader.readLine()
             let blank = reader.readLine()
-            if (!MAGIC.equals(magic) || !VERSION_1.equals(version) || !("${appVersion}").equals(appVersionString) || !("${valueCount}").equals(valueCountString) || !"".equals(blank)) {
+            if (MAGIC != (magic) || VERSION_1 != (version) || ("${appVersion}") != (appVersionString) || ("${valueCount}") != (valueCountString) || "" != (blank)) {
                 
                 throw DiskLruCacheException("unexpected journal header: [${magic}, ${version}, ${valueCountString}, ${blank}]")
             }
@@ -279,7 +279,7 @@ public class DiskLruCache {
     private func readJournalLine(line: String): Unit {
         var firstSpace = -1
         try {
-            firstSpace = line.indexOf(' ').getOrThrow()
+            firstSpace = line.indexOf(" ").getOrThrow()
         } catch (e: Exception) {
             throw DiskLruCacheException("unexpected journal line: ${line}")
         }
@@ -288,18 +288,18 @@ public class DiskLruCache {
         var secondSpace = -1
         var secondSpaceds: Bool = false
         try {
-            secondSpace = line.indexOf(' ', keyBegin).getOrThrow()
+            secondSpace = line.indexOf(" ", keyBegin).getOrThrow()
         } catch (e: Exception) {
             secondSpaceds = true
         }
         if (secondSpaceds) {
-            key = line.substring(keyBegin)
+            key = line[keyBegin..]
             if (firstSpace == REMOVE.size && line.startsWith(REMOVE)) {
                 lruEntries.remove(key)
                 return
             }
         } else {
-            key = line.substring(keyBegin, secondSpace)
+            key = line[keyBegin..secondSpace]
         }
 
         var entry = Entry("",this)
@@ -311,7 +311,7 @@ public class DiskLruCache {
         }
 
         if (secondSpace != -1 && firstSpace == CLEAN.size && line.startsWith(CLEAN)) {
-            let parts: Array<String> = line.substring(secondSpace + 1).split(" ")
+            let parts: Array<String> = line[(secondSpace + 1)..].split(" ")
             entry.readable = true
             entry.currentEditor = None
             entry.setLengths(parts)
@@ -420,19 +420,19 @@ public class DiskLruCache {
             var jw = wirteSink(journalWriter)
             if (entry.readable || success) {
                 entry.readable = true
-                jw.write((CLEAN + " ").toUtf8Array())
-                jw.write(entry.key.toUtf8Array())
-                jw.write(entry.getLengths().toUtf8Array())
-                jw.write("\n".toUtf8Array())
+                jw.write((CLEAN + " ").toArray())
+                jw.write(entry.key.toArray())
+                jw.write(entry.getLengths().toArray())
+                jw.write("\n".toArray())
                 if (success) {
                     entry.sequenceNumber = nextSequenceNumber
                     nextSequenceNumber++
                 }
             } else {
                 lruEntries.remove(entry.key)
-                jw.write((REMOVE + " ").toUtf8Array())
-                jw.write(entry.key.toUtf8Array())
-                jw.write("\n".toUtf8Array())
+                jw.write((REMOVE + " ").toArray())
+                jw.write(entry.key.toArray())
+                jw.write("\n".toArray())
             }
             jw.flush()
             if (size > maxSize || journalRebuildRequired()) { cleanUp() }
@@ -509,10 +509,10 @@ public class DiskLruCache {
             entry.currentEditor = Option<Editor>.Some(editor)
 
             let jw = journalWriter.getOrThrow()
-            jw.write(DIRTY.toUtf8Array())
-            jw.write(" ".toUtf8Array())
-            jw.write(key.toUtf8Array())
-            jw.write("\n".toUtf8Array())
+            jw.write(DIRTY.toArray())
+            jw.write(" ".toArray())
+            jw.write(key.toArray())
+            jw.write("\n".toArray())
             jw.flush()
             return Option<Editor>.Some(editor)
         }
@@ -542,10 +542,10 @@ public class DiskLruCache {
             }
             redundantOpCount++
             let jw = journalWriter.getOrThrow()
-            jw.write(READ.toUtf8Array())
-            jw.write(" ".toUtf8Array())
-            jw.write(key.toUtf8Array())
-            jw.write("\n".toUtf8Array())
+            jw.write(READ.toArray())
+            jw.write(" ".toArray())
+            jw.write(key.toArray())
+            jw.write("\n".toArray())
 
             if (journalRebuildRequired()) {
                  cleanUp()
@@ -611,7 +611,7 @@ class Entry {
 }
 
 public class Editor {
-    let entry: Entry
+    var entry: Entry
     protected let written: Option<Array<Bool>>
     private var hasErrors: Bool = false
     private var committed: Bool = false
@@ -677,7 +677,7 @@ public class Editor {
         let writer = newOutputStream(index)
         try {
             if (writer.canWrite()) {
-                writer.write(value.toUtf8Array())
+                writer.write(value.toArray())
             }
         } finally {
             writer.close()
@@ -737,15 +737,11 @@ public class Snapshot {
     }
 
     public func getString(index: Int64): String {
-        buff.clear()
+        buff.reset()
         let file = getInputStream(index)
         var read = file.read(buffArr)
         while (read != 0) {
-            if (read != buffArr.size) {
-                buff.append(String.fromUtf8(buffArr[0..read]))
-            } else {
-                buff.append(buffArr)
-            }
+            buff.appendFromUtf8(buffArr.slice(0, read))
             read = file.read(buffArr)
         }
         return buff.toString()

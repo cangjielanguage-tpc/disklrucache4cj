@@ -1,12 +1,12 @@
 {
-    "cjc_version": "0.39.8", 
+    "cjc_version": "0.45.2", 
     "organization": "cangjie",
     "name": "disklrucache",
     "description": "nothing here",
     "version": "0.0.2",
     "requires": {
       "charset": {
-        "organization": "pllab",
+        "branch": "v0.0.4.B002",
         "version": "0.0.2",
         "git": "https://gitee.com/HW-PLLab/charset.git"
       }
