@@ -741,7 +741,7 @@ public class Snapshot {
         let file = getInputStream(index)
         var read = file.read(buffArr)
         while (read != 0) {
-            buff.appendFromUtf8(buffArr.slice(0, read))
+            unsafe {buff.appendFromUtf8Unchecked(buffArr.slice(0, read))}
             read = file.read(buffArr)
         }
         return buff.toString()
