@@ -1,0 +1,15 @@
+[dependencies]
+  charset = {branch = "v0.0.4.B002", git = "https://gitee.com/HW-PLLab/charset.git", version = "0.0.2"}
+
+[package]
+  cjc-version = "0.49.2"
+  compile-option = "-O2"
+  description = "nothing here"
+  link-option = ""
+  name = "disklrucache"
+  output-type = "dynamic"
+  src-dir = "src"
+  target-dir = ""
+  version = "0.0.2"
+  package-configuration = {}
+  scripts = {}
