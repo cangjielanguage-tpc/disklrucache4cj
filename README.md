@@ -84,7 +84,7 @@ cjpm build
 ```shell
 cd disklrucache4cj/test/
 mkdir tmp
-cjc -O2 --import-path xxxxx/disklrucache4cj/build/ -L xxxxx/disklrucache4cj/build/disklrucache  -l disklrucache_disklrucache  -L xxxxx/disklrucache4cj/build/charset -l charset_charset.encoding -l charset_charset.simplechinese -l charset_charset.singlebyte -l charset_charset.korean -l charset_charset -l charset_charset.japanese -l charset_charset.unicode -l charset_charset.traditionchinese -l disklrucache_disklrucache -l charset_charset.encoding -l charset_charset.simplechinese -l charset_charset.singlebyte -l charset_charset.korean -l charset_charset -l charset_charset.japanese -l charset_charset.unicode -l charset_charset.traditionchinese -l charset_charset.encoding -l charset_charset.simplechinese -l charset_charset.singlebyte -l charset_charset.korean -l charset_charset -l charset_charset.japanese -l charset_charset.unicode -l charset_charset.traditionchinese  test/LLT/test.cj -o tmp/test.cj.out --test
+cjc -O2 --import-path xxxxx/disklrucache4cj/target/release  -L xxxxx/disklrucache4cj/target/release/disklrucache -L xxxxx/disklrucache4cj/target/release/charset -l charset_charset.singlebyte -l charset_charset.korean -l charset_charset.traditionchinese -l charset_charset -l disklrucache_disklrucache -l charset_charset.unicode -l charset_charset.simplechinese -l charset_charset.encoding -l charset_charset.exception -l charset_charset.japanese  LLT/test.cj -o tmp/test.cj.out --test
 ```
 
 ##### 1.1 具体说明
@@ -98,12 +98,12 @@ cjc -O2
 - 导入多个库,每个库都需要--import-path和 -L
 
 ```shell
---import-path xxxxx/disklrucache4cj/build/ -L xxxxx/disklrucache4cj/build/disklrucache -l disklrucache_disklrucache
+--import-path xxxxx/disklrucache4cj/target/release -L xxxxx/disklrucache4cj/target/release/disklrucache -L xxxxx/disklrucache4cj/target/release/charset
 ```
 - -l 要导入的具体的包, 用"库名_包名"
 - 导入一个库中有多个包时,用多个 -l
 ```shell
---import-path xxxxx/disklrucache4cj/build/ -L xxxxx/disklrucache4cj/build/charset -l charset_charset.encoding -l charset_charset.simplechinese -l charset_charset.singlebyte -l charset_charset.korean -l charset_charset -l charset_charset.japanese -l charset_charset.unicode -l charset_charset.traditionchinese -l disklrucache_disklrucache -l charset_charset.encoding -l charset_charset.simplechinese -l charset_charset.singlebyte -l charset_charset.korean -l charset_charset -l charset_charset.japanese -l charset_charset.unicode -l charset_charset.traditionchinese -l charset_charset.encoding -l charset_charset.simplechinese -l charset_charset.singlebyte -l charset_charset.korean -l charset_charset -l charset_charset.japanese -l charset_charset.unicode -l charset_charset.traditionchinese
+--import-path xxxxx/disklrucache4cj/target/release -L xxxxx/disklrucache4cj/target/release/disklrucache -L xxxxx/disklrucache4cj/target/release/charset -l charset_charset.singlebyte -l charset_charset.korean -l charset_charset.traditionchinese -l charset_charset -l disklrucache_disklrucache -l charset_charset.unicode -l charset_charset.simplechinese -l charset_charset.encoding -l charset_charset.exception -l charset_charset.japanese
 ```
 
 - 测试用例的完整路径和用例中引入文件的完整路径
