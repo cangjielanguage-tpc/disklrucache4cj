@@ -1,12 +1,12 @@
 // EXEC: cjc %import-path %L %l %f
 // EXEC: ./main
 
-from disklrucache import disklrucache.*
-from std import fs.*
-from std import math.*
-from std import os.posix.*
-from std import unittest.*
-from std import unittest.testmacro.*
+import disklrucache.*
+import std.fs.*
+import std.math.*
+import std.os.posix.*
+import std.unittest.*
+import std.unittest.testmacro.*
 
 main() {
 

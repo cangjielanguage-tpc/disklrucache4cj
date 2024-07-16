@@ -1,14 +1,14 @@
 // EXEC: cjc %import-path %L %l %f
 // EXEC: ./main
 
-from disklrucache import disklrucache.*
-from std import io.*
-from std import fs.*
-from std import time.*
-from std import os.posix.*
-from std import unittest.*
-from std import unittest.testmacro.*
-from std import math.*
+import disklrucache.*
+import std.io.*
+import std.fs.*
+import std.time.*
+import std.os.posix.*
+import std.unittest.*
+import std.unittest.testmacro.*
+import std.math.*
 @Test
 public class LruCacheOpen1Test {
     @TestCase

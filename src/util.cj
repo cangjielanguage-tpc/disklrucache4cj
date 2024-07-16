@@ -3,11 +3,11 @@
  */
 package disklrucache
 
-from std import io.*
-from std import fs.*
-from std import collection.*
-from charset import charset.*
-from charset import  charset.encoding.*
+import std.io.*
+import std.fs.*
+import std.collection.*
+import charset.*
+import charset.encoding.*
 class Util {
 
     static let US_ASCII: Charset = Charsets.ISO_8859_2

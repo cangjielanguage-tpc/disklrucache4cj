@@ -3,13 +3,14 @@
  */
 package disklrucache
 
-from std import io.*
-from std import fs.*
-from std import collection.*
-from std import unicode.*
-from std import os.posix.*
-from std import convert.*
-from std import regex.*
+import std.io.*
+import std.fs.*
+import std.collection.*
+import std.unicode.*
+import std.os.posix.*
+import std.convert.*
+import std.regex.*
+import std.sync.*
 
 public class DiskLruCache {
 

@@ -3,9 +3,9 @@
 </div>
 
 <p align="center">
-<img alt="" src="https://img.shields.io/badge/release-v0.0.2-brightgreen" style="display: inline-block;" />
+<img alt="" src="https://img.shields.io/badge/release-v0.0.1-brightgreen" style="display: inline-block;" />
 <img alt="" src="https://img.shields.io/badge/build-pass-brightgreen" style="display: inline-block;" />
-<img alt="" src="https://img.shields.io/badge/cjc-v0.51.4-brightgreen" style="display: inline-block;" />
+<img alt="" src="https://img.shields.io/badge/cjc-v0.53.4-brightgreen" style="display: inline-block;" />
 <img alt="" src="https://img.shields.io/badge/cjcov-90.3%25-brightgreen" style="display: inline-block;" />
 <img alt="" src="https://img.shields.io/badge/project-open-brightgreen" style="display: inline-block;" />
 </p>
@@ -135,12 +135,12 @@ test.cj.out
 
 
 ```cangjie
-from disklrucache import disklrucache.*
-from std import fs.*
-from std import math.*
-from std import os.posix.*
-from std import unittest.*
-from std import unittest.testmacro.*
+import disklrucache.*
+import std.fs.*
+import std.math.*
+import std.os.posix.*
+import std.unittest.*
+import std.unittest.testmacro.*
 
 main() {
 
@@ -180,12 +180,12 @@ success
 #### 从缓存中读取数据 功能示例
 
 ```cangjie
-from disklrucache import disklrucache.*
-from std import fs.*
-from std import math.*
-from std import os.posix.*
-from std import unittest.*
-from std import unittest.testmacro.*
+import disklrucache.*
+import std.fs.*
+import std.math.*
+import std.os.posix.*
+import std.unittest.*
+import std.unittest.testmacro.*
 
 main() {
 
@@ -225,12 +225,12 @@ success
 #### 缓存中删除指定key值的缓存文件 功能示例
 
 ```cangjie
-from disklrucache import disklrucache.*
-from std import fs.*
-from std import math.*
-from std import os.posix.*
-from std import unittest.*
-from std import unittest.testmacro.*
+import disklrucache.*
+import std.fs.*
+import std.math.*
+import std.os.posix.*
+import std.unittest.*
+import std.unittest.testmacro.*
 
 main() {
 
@@ -271,12 +271,12 @@ success
 #### 同步缓存文件的操作记录至journal和关闭缓存 功能示例
 
 ```cangjie
-from disklrucache import disklrucache.*
-from std import fs.*
-from std import math.*
-from std import os.posix.*
-from std import unittest.*
-from std import unittest.testmacro.*
+import disklrucache.*
+import std.fs.*
+import std.math.*
+import std.os.posix.*
+import std.unittest.*
+import std.unittest.testmacro.*
 
 main() {
 
@@ -311,7 +311,8 @@ success
 ```
 
 ## 开源协议
-Apache License 2.0
+
+本项目基于 [Apache License 2.0](./LICENSE) ，请自由的享受和参与开源。
 
 ## 参与贡献
 
