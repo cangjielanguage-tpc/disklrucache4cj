@@ -6,8 +6,8 @@ package disklrucache
 import std.io.*
 import std.fs.*
 import std.collection.*
-import charset.*
-import charset.encoding.*
+import charset4cj.charset.*
+import charset4cj.charset.encoding.*
 class Util {
 
     static let US_ASCII: Charset = Charsets.ISO_8859_2
