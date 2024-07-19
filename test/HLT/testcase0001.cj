@@ -1,8 +1,8 @@
 // EXEC: cjc %import-path %L %l %f
 // EXEC: ./main
 
-from disklrucache import disklrucache.*
-from std import io.*
+import disklrucache.*
+import std.io.*
 main() {
     var str = BlSink()
     let data: Array<Byte> = [0,1]

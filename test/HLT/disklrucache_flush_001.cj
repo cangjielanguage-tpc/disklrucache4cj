@@ -1,13 +1,13 @@
-//3rd_party_lib:disklrucache4cj/build/disklrucache
-//3rd_party_lib:disklrucache4cj/build/charset
+//3rd_party_lib:disklrucache4cj/target/release/disklrucache
+//3rd_party_lib:disklrucache4cj/target/release/charset
 
-from disklrucache import disklrucache.*
-from std import io.*
-from std import fs.*
-from std import os.posix.*
-from std import unittest.*
-from std import unittest.testmacro.*
-from std import math.*
+import disklrucache.*
+import std.io.*
+import std.fs.*
+import std.os.posix.*
+import std.unittest.*
+import std.unittest.testmacro.*
+import std.math.*
 @Test
 public class disklrucache_flush_001 {
     @TestCase

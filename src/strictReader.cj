@@ -3,17 +3,17 @@
  */
 package disklrucache
 
-from std import io.*
-from std import fs.*
-from std import sync.*
-from std import collection.*
-from charset import charset.*
-from charset import  charset.encoding.*
+import std.io.*
+import std.fs.*
+import std.sync.*
+import std.collection.*
+import charset.*
+import charset.encoding.*
 
 class StrictLineReader {
 
-    private static let CR = UInt8(UInt32('\r'))
-    private static let LF = UInt8(UInt32('\n'))
+    private static let CR = UInt8(UInt32(r'\r'))
+    private static let LF = UInt8(UInt32(r'\n'))
 
     private var input: InputStream
 
