@@ -7,8 +7,8 @@ import std.io.*
 import std.fs.*
 import std.sync.*
 import std.collection.*
-import charset.*
-import charset.encoding.*
+import charset4cj.charset.*
+import charset4cj.charset.encoding.*
 
 class StrictLineReader {
 
