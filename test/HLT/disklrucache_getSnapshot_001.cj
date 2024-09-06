@@ -1,5 +1,5 @@
 //3rd_party_lib:disklrucache4cj/target/release/disklrucache
-//3rd_party_lib:disklrucache4cj/target/release/charset
+//3rd_party_lib:disklrucache4cj/target/release/charset4cj
 
 import disklrucache.*
 import std.io.*
