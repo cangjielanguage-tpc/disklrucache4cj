@@ -1,8 +1,8 @@
 [dependencies]
-  charset4cj = {branch = "v0.0.1.B001", git = "https://gitcode.com/Cangjie-TPC/charset4cj.git"}
+  charset4cj = {branch = "develop", git = "https://gitcode.com/Cangjie-TPC/charset4cj.git"}
 
 [package]
-  cjc-version = "0.54.3"
+  cjc-version = "0.55.3"
   compile-option = "-O2"
   description = "nothing here"
   link-option = ""

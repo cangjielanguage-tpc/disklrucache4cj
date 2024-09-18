@@ -536,7 +536,7 @@ public class DiskLruCache {
                 return None
             }
 
-            var ins: Array<File> = Array<File>(valueCount, item: unsafe{zeroValue<File>()})
+            var ins: Array<File> = Array<File>(valueCount, repeat: unsafe{zeroValue<File>()})
             for (i in 0..valueCount) {
                 ins[i] = entry.getCleanFile(i)
             }
@@ -567,7 +567,7 @@ class Entry {
     init(key: String, disk: DiskLruCache) {
         this.disk = disk
         this.key = key
-        this.lengths = Array<Int64>(disk.valueCount, item: 0)
+        this.lengths = Array<Int64>(disk.valueCount, repeat: 0)
     }
 
     public func getLengths(): String {
@@ -622,7 +622,7 @@ public class Editor {
         this.entry = entry
         this.disk = disk
         this.written = if (!entry.readable) {
-            Array<Bool>(disk.valueCount, item: false)
+            Array<Bool>(disk.valueCount, repeat: false)
         } else {
             Option<Array<Bool>>.None
         }
@@ -708,7 +708,7 @@ public class Editor {
 
 public class Snapshot {
     private var buff = StringBuilder()
-    private var buffArr = Array<Byte>(8192, item: 0)
+    private var buffArr = Array<Byte>(8192, repeat: 0)
     private var key: String
     private var sequenceNumber: Int64
     private var ins: Array<File>
