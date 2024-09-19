@@ -33,7 +33,7 @@ public class LruCacheOpen1Test {
             src.commit()
             see = i
     	}
-    	let e = Duration.since(s).toNanoseconds()
+    	let e = (DateTime.now()-s).toNanoseconds()
     	println("[ PASSED ] CASE: testEventbus_${n} (${e} ns, ${e/n} ns/op)\n")
         @Assert(false, cache.isClosed())
     }

@@ -38,7 +38,7 @@ class StrictLineReader {
         }
         this.input = input
         this.charset = charset
-        this.buf = Array<Byte>(capacity, item:0)
+        this.buf = Array<Byte>(capacity, repeat:0)
     }
 
     public func readLine(): String {
