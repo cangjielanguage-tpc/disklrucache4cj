@@ -65,7 +65,7 @@ class StrictLineReader {
                 }
             }
 
-            var out: ByteArrayStream = ByteArrayStream(end - pos + 80)
+            var out: ByteBuffer  = ByteBuffer(end - pos + 80)
 
             while (true) {
                 out.write(buf.slice(pos,end -pos))

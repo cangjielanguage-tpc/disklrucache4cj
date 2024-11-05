@@ -5,7 +5,7 @@ import disklrucache.*
 import std.io.*
 import std.fs.*
 import std.time.*
-import std.os.posix.*
+import std.posix.*
 import std.unittest.*
 import std.unittest.testmacro.*
 import std.math.*
@@ -18,7 +18,7 @@ public class LruCacheOpen1Test {
         var TmpDir = path + "/DiskLruCacheTest"
         let appVersion = 100
         var cacheDir: Directory
-        if (Directory.exists(TmpDir)) {
+        if (exists(TmpDir)) {
             cacheDir = Directory(TmpDir)
         } else {
             cacheDir = Directory.create(TmpDir)

@@ -14,7 +14,7 @@ main() {
 }
 
 public class BlSink <: Sink {
-    public var buf: ByteArrayStream = ByteArrayStream()
+    public var buf: ByteBuffer  = ByteBuffer ()
     public init () {}
     public func write(bytes: Array<Byte>): Unit {
         buf.write(bytes)

@@ -7,7 +7,7 @@ import std.io.*
 import std.fs.*
 import std.collection.*
 import std.unicode.*
-import std.os.posix.*
+import std.posix.*
 import std.convert.*
 import std.regex.*
 import std.sync.*
@@ -64,11 +64,11 @@ public class DiskLruCache {
 
         // If a bkp file exists, use it instead.
         var backupFile = directory.info.path.join(JOURNAL_FILE_BACKUP)
-        if (File.exists(backupFile)) {
+        if (exists(backupFile)) {
             var journalFile = directory.info.path.join(JOURNAL_FILE)
             // If journal file also exists just delete backup file.
-            if (File.exists(journalFile)) {
-                File.delete(backupFile)
+            if (exists(journalFile)) {
+                remove(backupFile)
             } else {
                 renameTo(backupFile, journalFile, true)
             }
@@ -76,7 +76,7 @@ public class DiskLruCache {
 
         // Prefer to pick up where we left off.
         var cache: DiskLruCache = DiskLruCache(directory, appVersion, valueCount, maxSize)
-        if (File.exists(cache.journalFile)) {
+        if (exists(cache.journalFile)) {
 
                 try {
                     cache.readJournal()
@@ -203,7 +203,7 @@ public class DiskLruCache {
             }
             
             var filejournals: File
-            if (File.exists(journalFileTmp)) {
+            if (exists(journalFileTmp)) {
                 filejournals = File(journalFileTmp, Open(true,true))
             } else {
                 filejournals = File(journalFileTmp, Create(true))
@@ -235,12 +235,12 @@ public class DiskLruCache {
             } finally {
                 writer.close()
             }
-            if (File.exists(journalFile)) {
+            if (exists(journalFile)) {
                 renameTo(journalFile, journalFileBackup, true);
             }  
             renameTo(journalFileTmp, journalFile, false);
-            if (File.exists(journalFileBackup)) {
-                File.delete(journalFileBackup)
+            if (exists(journalFileBackup)) {
+                remove(journalFileBackup)
             }   
             journalWriter = ReallBufferSink(FileSink(File(journalFile, Append)))
         }
@@ -325,9 +325,9 @@ public class DiskLruCache {
     }
 
     private static func deleteIfExists(file: Path): Unit {
-        if (File.exists(file)) {
+        if (exists(file)) {
             try {
-                File.delete(file)
+                remove(file)
             }catch (e: Exception){
                 throw DiskLruCacheException("failed to delete ")
             }  
@@ -339,7 +339,7 @@ public class DiskLruCache {
         if (deleteDestination) {
             deleteIfExists(to)
         }
-        File.move(fo,to, true)
+        rename(fo,to:to, overwrite:true)
 
     }
 
@@ -397,7 +397,7 @@ public class DiskLruCache {
                         editor.abort()
                         throw DiskLruCacheException("newly created entry didn't create value for index ${i}")
                     }
-                    if (!File.exists(entry.getDirtyFile(i).info.path.toString())) {
+                    if (!exists(entry.getDirtyFile(i).info.path.toString())) {
                         editor.abort()
                         return
                     }
@@ -405,11 +405,11 @@ public class DiskLruCache {
             }
             for (i in 0..valueCount) {
                 let dirty = entry.getDirtyFile(i)
-                if (success && File.exists(dirty.info.path.toString()) ) {
+                if (success && exists(dirty.info.path.toString()) ) {
                     let clean = entry.getCleanFile(i)
-                    File.move(dirty.info.path.toString(),clean.info.path.toString(), true)
+                    rename(dirty.info.path,to:clean.info.path, overwrite:true)
                     let oldLength = entry.lengths[i]
-                    let newLength = FileInfo(clean.info.path.toString()).length
+                    let newLength = FileInfo(clean.info.path.toString()).size
                     clean.close()
                     entry.lengths[i] = newLength
                     size = size - oldLength + newLength
@@ -594,7 +594,7 @@ class Entry {
     }
 
     public func getCleanFile(i: Int64): File {
-        if(File.exists(disk.directory.info.path.join(key+"."+"${i}"))) {
+        if(exists(disk.directory.info.path.join(key+"."+"${i}"))) {
             return File(disk.directory.info.path.join(key+"."+"${i}"), Open(true,true))
         } else {
             return File(disk.directory.info.path.join(key+"."+"${i}"), Create(true))
@@ -602,7 +602,7 @@ class Entry {
     }
 
     public func getDirtyFile(i: Int64): File {
-        if(File.exists(disk.directory.info.path.join(key+"."+"${i}"+".tmp"))) {
+        if(exists(disk.directory.info.path.join(key+"."+"${i}"+".tmp"))) {
             return File(disk.directory.info.path.join(key+"."+"${i}"+".tmp"), Open(true,true))
         } else {
             return File(disk.directory.info.path.join(key+"."+"${i}"+".tmp"), Create(true))
