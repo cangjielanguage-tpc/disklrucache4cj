@@ -28,8 +28,8 @@ class Util {
             if (fil.isDirectory()) {
                 deleteContents(Directory(fil.path))
             }
-            if (fil.isFile()) {
-                File.delete(fil.path)
+            if (fil.isRegular()) {
+                remove(fil.path)
             }
         }
     }
@@ -46,7 +46,7 @@ class Util {
 class ReallBufferSink <: Sink {
     var closed: Bool = false
     var sink: Sink
-    private var buf: ByteArrayStream = ByteArrayStream()
+    private var buf: ByteBuffer = ByteBuffer()
 
     public init(sink: Sink) {
         this.sink = sink
@@ -66,7 +66,7 @@ class ReallBufferSink <: Sink {
             throw DiskLruCacheException("closed");
         } else {
             if (this.buf.length > 0) {
-                this.sink.write(this.buf.readToEnd())
+                this.sink.write(this.buf.bytes())
             }
             this.sink.flush()
         }
@@ -76,7 +76,7 @@ class ReallBufferSink <: Sink {
     public func close(): Unit {
         if (!closed) {
             if (buf.length > 0) {
-                this.sink.write(this.buf.readToEnd())
+                this.sink.write(this.buf.bytes())
             }
             sink.close()
             closed = true

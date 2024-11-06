@@ -5,7 +5,7 @@
 import disklrucache.*
 import std.io.*
 import std.fs.*
-import std.os.posix.*
+import std.posix.*
 import std.unittest.*
 import std.unittest.testmacro.*
 import std.math.*
