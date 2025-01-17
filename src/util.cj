@@ -19,18 +19,13 @@ class Util {
         return str
     }
 
-    static func deleteContents(dir: Directory): Unit {
-        var files = dir.entryList()
+    static func deleteContents(dir: Path): Unit {
+        var files = Directory.readFrom(dir)
         if (files.isEmpty()) {
             throw DiskLruCacheException("not a readable directory")
         }
         for (fil in files) {
-            if (fil.isDirectory()) {
-                deleteContents(Directory(fil.path))
-            }
-            if (fil.isRegular()) {
-                remove(fil.path)
-            }
+            remove(fil.path)
         }
     }
 
