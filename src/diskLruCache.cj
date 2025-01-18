@@ -28,7 +28,7 @@ public class DiskLruCache {
     private static let READ: String = "READ"
 
 
-    protected var directory: Directory
+    protected var directory: Path
     private var journalFile: Path
     private var journalFileTmp: Path
     private var journalFileBackup: Path
@@ -43,18 +43,18 @@ public class DiskLruCache {
 
     let lock: Monitor = Monitor()
 
-    private init(directory: Directory, appVersion: Int64, valueCount: Int64, maxSize: Int64) {
+    private init(directory: Path, appVersion: Int64, valueCount: Int64, maxSize: Int64) {
         this.directory = directory
         this.appVersion = appVersion
-        this.journalFile = directory.info.path.join(JOURNAL_FILE)
-        this.journalFileTmp = directory.info.path.join(JOURNAL_FILE_TEMP)
-        this.journalFileBackup = directory.info.path.join(JOURNAL_FILE_BACKUP)
+        this.journalFile = directory.join(JOURNAL_FILE)
+        this.journalFileTmp = directory.join(JOURNAL_FILE_TEMP)
+        this.journalFileBackup = directory.join(JOURNAL_FILE_BACKUP)
         this.valueCount = valueCount
         this.maxSize = maxSize
 
     }
 
-    public static func open(directory: Directory, appVersion: Int64, valueCount: Int64, maxSize: Int64): DiskLruCache {
+    public static func open(directory: Path, appVersion: Int64, valueCount: Int64, maxSize: Int64): DiskLruCache {
         if (maxSize <= 0) {
             throw DiskLruCacheException("the max size of cache cannot be negative")
         }
@@ -63,9 +63,9 @@ public class DiskLruCache {
         }
 
         // If a bkp file exists, use it instead.
-        var backupFile = directory.info.path.join(JOURNAL_FILE_BACKUP)
+        var backupFile = directory.join(JOURNAL_FILE_BACKUP)
         if (exists(backupFile)) {
-            var journalFile = directory.info.path.join(JOURNAL_FILE)
+            var journalFile = directory.join(JOURNAL_FILE)
             // If journal file also exists just delete backup file.
             if (exists(journalFile)) {
                 remove(backupFile)
@@ -187,10 +187,10 @@ public class DiskLruCache {
                         deleteIfExists(cleanfiles.info.path)
                         deleteIfExists(dirtyfiles.info.path)
                     }
-                    str.append(key)
+                    str.add(key)
             }
         }
-        lruEntries.removeAll(str)
+        lruEntries.remove(all:str)
     }
 
     private func rebuildJournal(): Unit {
@@ -204,9 +204,9 @@ public class DiskLruCache {
             
             var filejournals: File
             if (exists(journalFileTmp)) {
-                filejournals = File(journalFileTmp, Open(true,true))
+                filejournals = File(journalFileTmp, ReadWrite)
             } else {
-                filejournals = File(journalFileTmp, Create(true))
+                filejournals = File(journalFileTmp, ReadWrite)
             }
             var writer = ReallBufferSink(FileSink(filejournals))
             try {
@@ -247,7 +247,7 @@ public class DiskLruCache {
     }
 
     private func readJournal(): Unit {
-        var reader: StrictLineReader =  StrictLineReader(File(journalFile, Open(true,true)), Util.US_ASCII)
+        var reader: StrictLineReader =  StrictLineReader(File(journalFile, ReadWrite), Util.US_ASCII)
 
         try {
             let magic = reader.readLine()
@@ -307,7 +307,7 @@ public class DiskLruCache {
             entry = lruEntries.get(key).getOrThrow()
         } catch (e: Exception) {
             entry = Entry(key,this)
-            lruEntries.put(key, entry)
+            lruEntries.add(key, entry)
         }
 
         if (secondSpace != -1 && firstSpace == CLEAN.size && line.startsWith(CLEAN)) {
@@ -367,7 +367,7 @@ public class DiskLruCache {
 
     }
 
-    public func getDirectory(): Directory {
+    public func getDirectory(): Path {
         return directory
     }
 
@@ -496,7 +496,7 @@ public class DiskLruCache {
 
             if (hasNull) {
                 entry = Entry(key, this)
-                lruEntries.put(key, entry)
+                lruEntries.add(key, entry)
             } 
             match (entry.currentEditor) {
                 case Some(_) => 
@@ -594,18 +594,18 @@ class Entry {
     }
 
     public func getCleanFile(i: Int64): File {
-        if(exists(disk.directory.info.path.join(key+"."+"${i}"))) {
-            return File(disk.directory.info.path.join(key+"."+"${i}"), Open(true,true))
+        if(exists(disk.directory.join(key+"."+"${i}"))) {
+            return File(disk.directory.join(key+"."+"${i}"), ReadWrite)
         } else {
-            return File(disk.directory.info.path.join(key+"."+"${i}"), Create(true))
+            return File(disk.directory.join(key+"."+"${i}"), ReadWrite)
         }
     }
 
     public func getDirtyFile(i: Int64): File {
-        if(exists(disk.directory.info.path.join(key+"."+"${i}"+".tmp"))) {
-            return File(disk.directory.info.path.join(key+"."+"${i}"+".tmp"), Open(true,true))
+        if(exists(disk.directory.join(key+"."+"${i}"+".tmp"))) {
+            return File(disk.directory.join(key+"."+"${i}"+".tmp"), ReadWrite)
         } else {
-            return File(disk.directory.info.path.join(key+"."+"${i}"+".tmp"), Create(true))
+            return File(disk.directory.join(key+"."+"${i}"+".tmp"), ReadWrite)
         }
     }
 }

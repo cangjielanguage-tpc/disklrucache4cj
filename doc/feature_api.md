@@ -29,14 +29,14 @@ public class DiskLruCache {
     /**
      * 打开缓存目录，如果不存在则创建缓存
      * 
-     * 参数 directory - 缓存目录
+     * 参数 directory - 缓存目录路径
      * 参数 appVersion - 缓存版本
      * 参数 valueCount - 算每个缓存项的值
      * 参数 maxSize - 存储的最大字节数
      * 异常 DiskLruCacheException 如果maxSize和valueCount为小于等于零时抛出
      * 返回值 DiskLruCache - 返回缓存的对象
      */
-    public static func open(directory: Directory, appVersion: Int64, valueCount: Int64, maxSize: Int64): DiskLruCache
+    public static func open(directory: Path, appVersion: Int64, valueCount: Int64, maxSize: Int64): DiskLruCache
 
     /**
      * 关闭缓存并删除其所有存储的值
@@ -50,11 +50,11 @@ public class DiskLruCache {
     public func close(): Unit
 
     /**
-     * 返回此缓存存储其数据的目录
+     * 返回此缓存存储其数据的目录路径
      *
      * 返回值 Directory
      */
-    public func getDirectory(): Directory
+    public func getDirectory(): Path
 
     /**
      * 返回此缓存应用于存储的最大字节数
@@ -202,10 +202,10 @@ public class LruCacheOpen1Test {
     public func open1Test(): Unit {
 
         var path: String = getcwd()
-        var TmpDir = path + "/DiskLruCacheTest"
+        var TmpDir = Path(path + "/DiskLruCacheTest")
         let appVersion = 100
-        var cacheDir = Directory.create(TmpDir) 
-        var cache = DiskLruCache.open(cacheDir, appVersion, 2, Int64(Int32.Max))
+        Directory.create(TmpDir) 
+        var cache = DiskLruCache.open(TmpDir, appVersion, 2, Int64(Int32.Max))
         let key = "k1"
         let src = cache.edit(key).getOrThrow()
         src.set(0, "ABC")
@@ -308,10 +308,10 @@ public class LruCacheOpen1Test {
     public func open1Test(): Unit {
 
         var path: String = getcwd()
-        var TmpDir = path + "/DiskLruCacheTest37"
+        var TmpDir = Path(path + "/DiskLruCacheTest37")
         let appVersion = 100
-        var cacheDir = Directory.create(TmpDir) 
-        var cache = DiskLruCache.open(cacheDir, appVersion, 2, Int64(Int32.Max))
+        Directory.create(TmpDir) 
+        var cache = DiskLruCache.open(TmpDir, appVersion, 2, Int64(Int32.Max))
         let key = "k1"
         let src = cache.edit(key).getOrThrow()
         src.set(0, "OP")
@@ -373,10 +373,10 @@ public class LruCacheOpen1Test {
     public func open1Test(): Unit {
 
         var path: String = getcwd()
-        var TmpDir = path + "/DiskLruCacheTest"
+        var TmpDir = Path(path + "/DiskLruCacheTest")
         let appVersion = 100
-        var cacheDir = Directory.create(TmpDir) 
-        var cache = DiskLruCache.open(cacheDir, appVersion, 2, Int64(Int32.Max))
+        Directory.create(TmpDir) 
+        var cache = DiskLruCache.open(TmpDir, appVersion, 2, Int64(Int32.Max))
         let key = "k1"
         let src = cache.edit(key).getOrThrow()
         src.set(0, "ABC")
@@ -435,10 +435,10 @@ public class LruCacheOpen1Test {
     public func open1Test(): Unit {
 
         var path: String = getcwd()
-        var TmpDir = path + "/DiskLruCacheTest"
+        var TmpDir = Path(path + "/DiskLruCacheTest")
         let appVersion = 100
-        var cacheDir = Directory.create(TmpDir)
-        var cache = DiskLruCache.open(cacheDir, appVersion, 2, Int64(Int32.Max))
+        Directory.create(TmpDir)
+        var cache = DiskLruCache.open(TmpDir, appVersion, 2, Int64(Int32.Max))
         cache.close()
         cache.isClosed()
         println("success")

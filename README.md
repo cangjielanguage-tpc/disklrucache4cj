@@ -5,7 +5,7 @@
 <p align="center">
 <img alt="" src="https://img.shields.io/badge/release-v0.0.1-brightgreen" style="display: inline-block;" />
 <img alt="" src="https://img.shields.io/badge/build-pass-brightgreen" style="display: inline-block;" />
-<img alt="" src="https://img.shields.io/badge/cjc-v0.56.4-brightgreen" style="display: inline-block;" />
+<img alt="" src="https://img.shields.io/badge/cjc-v0.58.3-brightgreen" style="display: inline-block;" />
 <img alt="" src="https://img.shields.io/badge/cjcov-90.3%25-brightgreen" style="display: inline-block;" />
 <img alt="" src="https://img.shields.io/badge/project-open-brightgreen" style="display: inline-block;" />
 </p>
@@ -153,10 +153,10 @@ public class LruCacheOpen1Test {
     public func open1Test(): Unit {
 
         var path: String = getcwd()
-        var TmpDir = path + "/DiskLruCacheTest"
+        var TmpDir = Path(path + "/DiskLruCacheTest")
         let appVersion = 100
-        var cacheDir = Directory.create(TmpDir) 
-        var cache = DiskLruCache.open(cacheDir, appVersion, 2, Int64(Int32.Max))
+        Directory.create(TmpDir) 
+        var cache = DiskLruCache.open(TmpDir, appVersion, 2, Int64(Int32.Max))
         let key = "k1"
         let src = cache.edit(key).getOrThrow()
         src.set(0, "ABC")
@@ -198,10 +198,10 @@ public class LruCacheOpen1Test {
     public func open1Test(): Unit {
 
         var path: String = getcwd()
-        var TmpDir = path + "/DiskLruCacheTest37"
+        var TmpDir = Path(path + "/DiskLruCacheTest37")
         let appVersion = 100
-        var cacheDir = Directory.create(TmpDir) 
-        var cache = DiskLruCache.open(cacheDir, appVersion, 2, Int64(Int32.Max))
+        Directory.create(TmpDir) 
+        var cache = DiskLruCache.open(TmpDir, appVersion, 2, Int64(Int32.Max))
         let key = "k1"
         let src = cache.edit(key).getOrThrow()
         src.set(0, "OP")
@@ -243,10 +243,10 @@ public class LruCacheOpen1Test {
     public func open1Test(): Unit {
 
         var path: String = getcwd()
-        var TmpDir = path + "/DiskLruCacheTest"
+        var TmpDir = Path(path + "/DiskLruCacheTest")
         let appVersion = 100
-        var cacheDir = Directory.create(TmpDir) 
-        var cache = DiskLruCache.open(cacheDir, appVersion, 2, Int64(Int32.Max))
+        Directory.create(TmpDir) 
+        var cache = DiskLruCache.open(TmpDir, appVersion, 2, Int64(Int32.Max))
         let key = "k1"
         let src = cache.edit(key).getOrThrow()
         src.set(0, "ABC")
@@ -289,10 +289,10 @@ public class LruCacheOpen1Test {
     public func open1Test(): Unit {
 
         var path: String = getcwd()
-        var TmpDir = path + "/DiskLruCacheTest"
+        var TmpDir = Path(path + "/DiskLruCacheTest")
         let appVersion = 100
-        var cacheDir = Directory.create(TmpDir)
-        var cache = DiskLruCache.open(cacheDir, appVersion, 2, Int64(Int32.Max))
+        Directory.create(TmpDir)
+        var cache = DiskLruCache.open(TmpDir, appVersion, 2, Int64(Int32.Max))
         cache.close()
         cache.isClosed()
         println("success")
