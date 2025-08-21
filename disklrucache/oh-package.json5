@@ -1,0 +1,12 @@
+{
+  "name": "@cangjie-tpc/disklrucache",
+  "version": "1.0.0",
+  "description": "Please describe the basic information.",
+  "main": "Index.ets",
+  "author": "",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "libdisklrucache.so": "file:./src/main/cangjie/types/libdisklrucache",
+    "libark_interop_loader.so": "file:./src/main/cangjie/loader"
+  }
+}

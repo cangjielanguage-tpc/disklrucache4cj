@@ -1,0 +1,9 @@
+{
+  "module": {
+    "name": "disklrucache",
+    "type": "har",
+    "deviceTypes": [
+      "default"
+    ]
+  }
+}

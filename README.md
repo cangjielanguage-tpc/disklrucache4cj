@@ -3,10 +3,10 @@
 </div>
 
 <p align="center">
-<img alt="" src="https://img.shields.io/badge/release-v1.0.1-brightgreen" style="display: inline-block;" />
+<img alt="" src="https://img.shields.io/badge/release-v1.0.0-brightgreen" style="display: inline-block;" />
 <img alt="" src="https://img.shields.io/badge/build-pass-brightgreen" style="display: inline-block;" />
-<img alt="" src="https://img.shields.io/badge/cjc-v1.0.0-brightgreen" style="display: inline-block;" />
-<img alt="" src="https://img.shields.io/badge/cjcov-90.3%25-brightgreen" style="display: inline-block;" />
+<img alt="" src="https://img.shields.io/badge/cjc-v1.0.1-brightgreen" style="display: inline-block;" />
+<img alt="" src="https://img.shields.io/badge/cjcov----brightgreen" style="display: inline-block;" />
 <img alt="" src="https://img.shields.io/badge/project-open-brightgreen" style="display: inline-block;" />
 </p>
 
@@ -25,39 +25,28 @@ DiskLruCache 是一个管理硬盘内容的存储管理工具，它采用了最�
 - 🛠️ 支持同步缓存文件的操作记录至journal和关闭缓存
 
 
-## 软件架构
-
-### 架构图
-
-<p align="center">
-<img src="./doc/assets/readme_framework.png" width="60%" >
-</p>
-
-
 ### 源码目录
 
 ```shell
 .
-├── README.md
-├── doc
+├── AppScope
+├── doc                      # API文档
 │   ├── assets
 │   └── feature_api.md
-├── src
-│   └── disklrucache
-├── test
-│    ├── HLT
-│    └── LLT
-├── CHANGELOG.md
-├── gitee_gate.cfg
-├── LICENSE.txt
-├── module.json
-├── README.md
-└── README.OpenSource
+├── disklrucache
+│   └── src
+│      └─ main
+│          ├─ cangjie        # cangjie 源码
+│          ├─ ets            # ets 源码                       
+│          └─ resources      # 资源文件
+├── entry                    # 示例代码文件夹
+├── hvigor                   # 构建工具目录
+└── README.md                # 介绍及使用说明
 ```
 
 - `doc`  文档目录，用于存API接口文档
-- `src`  是库源码目录
-- `test` 存放 HLT 测试用例、LLT 自测用例
+- `disklrucache`  是库源码目录
+- `entry` 存放 示例代码
 
 ### 接口说明
 
@@ -66,253 +55,82 @@ DiskLruCache 是一个管理硬盘内容的存储管理工具，它采用了最�
 
 ## 使用说明
 
-### 编译（win/linux）
+### 编译构建
 
-两种编译方式
+1. 下载安装: 通过中心仓下载安装
 
-1. 使用脚本编译 
-    1. 下载配置[编译脚本](https://gitcode.com/Cangjie-TPC/TPC-Test-Framework.git)
-    2. ciTest build
-2. 使用cjpm编译 
-    1. 该三方库依赖stdx，请参考[stdx](https://gitcode.com/Cangjie/Cangjie-STDX#%E4%BD%BF%E7%94%A8%E6%8C%87%E5%AF%BC)文档配置`CANGJIE_STDX_PATH`路径
-    2. cjpm build
-
-### 执行用例
-编译用例并执行，步骤如下：
-
-#### 1. 进入 disklrucache4cj/test/ 目录下创建 tmp 文件夹，然后编译测试用例
-```shell
-cd disklrucache4cj/test/
-mkdir tmp
-cjc -O2 --import-path xxxxx/disklrucache4cj/target/release  -L xxxxx/disklrucache4cj/target/release/disklrucache -L xxxxx/disklrucache4cj/target/release/charset -l charset_charset.singlebyte -l charset_charset.korean -l charset_charset.traditionchinese -l charset_charset -l disklrucache_disklrucache -l charset_charset.unicode -l charset_charset.simplechinese -l charset_charset.encoding -l charset_charset.exception -l charset_charset.japanese  LLT/test.cj -o tmp/test.cj.out --test
+```sh
+ohpm install @cangjie-tpc/disklrucache
 ```
 
-##### 1.1 具体说明
+2. 在项目中使用 pinyin 项目
 
-- cjc命令, -O2表示开启优化
-```shell
-cjc -O2
-```
-- --import-path 导入disklrucache4cj库编译出来的库文件地址, 注意地址最后有"."
-- -L 导入库文件的完整路径
-- 导入多个库,每个库都需要--import-path和 -L
-
-```shell
---import-path xxxxx/disklrucache4cj/target/release -L xxxxx/disklrucache4cj/target/release/disklrucache -L xxxxx/disklrucache4cj/target/release/charset
-```
-- -l 要导入的具体的包, 用"库名_包名"
-- 导入一个库中有多个包时,用多个 -l
-```shell
---import-path xxxxx/disklrucache4cj/target/release -L xxxxx/disklrucache4cj/target/release/disklrucache -L xxxxx/disklrucache4cj/target/release/charset -l charset_charset.singlebyte -l charset_charset.korean -l charset_charset.traditionchinese -l charset_charset -l disklrucache_disklrucache -l charset_charset.unicode -l charset_charset.simplechinese -l charset_charset.encoding -l charset_charset.exception -l charset_charset.japanese
+```extendtypescript
+import {
+  DiskLruCache,
+  Snapshot,
+  SeekPosition,
+  Editor,
+  SeekPositionEnum,
+  File,
+  OpenMode,
+  OpenModeEnum
+} from '@cangjie-tpc/disklrucache'
 ```
 
-- 测试用例的完整路径和用例中引入文件的完整路径
-- -o 用例编译后输出的位置和名称, .out结尾, 一般使用"用例名称.out"
-- --test 用例编译命令结尾
-```shell
-xxxxx/disklrucache4cj/test/LLT/test.cj  -o xxxxx/disklrucache4cj/test/tmp/test.cj.out --test
-```
-
-#### 2. 把编译好的文件复制到 .out 文件下(disklrucache4cj/test/tmp/) 
-- disklrucache4cj/build/disklrucache/、disklrucache4cj/build/charset/ 目录中的文件都复制到 .out 文件位置(disklrucache4cj/test/tmp/ 中)
-
-#### 3. 进入到.out文件位置，执行用例
-- 进入到.out文件位置执行用例
-```shell
-cd xxxxx/disklrucache4cj/test/tmp/
-```
-- windows系统打开cmd,输入.out文件完整名称即可执行
-```shell
-test.cj.out
-```
-- Linux系统使用 ./.out文件完整名称
-```shell
-./test.cj.out
-```
 
 ### 功能示例
-#### 数据写入硬盘缓存中 功能示例
 
+从缓存中读取数据 
 
-```cangjie
-import disklrucache.*
-import std.fs.*
-import std.math.*
-import std.os.posix.*
-import std.unittest.*
-import std.unittest.testmacro.*
+```extendtypescript
+import {
+  DiskLruCache,
+  Snapshot,
+  SeekPosition,
+  Editor,
+  SeekPositionEnum,
+  File,
+  OpenMode,
+  OpenModeEnum
+} from '@cangjie-tpc/disklrucache'
 
-main() {
+@Entry
+@Component
+struct Index {
+  appVersion: number = 100
+  maxSize: number = 1024 * 1024
+  valueCount: number = 2
+  directory: string = '/data/storage/el2/base/cache'
 
-    let lrucache = LruCacheOpen1Test()
-    lrucache.open1Test()
-    return 0
-}
-
-@Test
-public class LruCacheOpen1Test {
-    @TestCase
-    public func open1Test(): Unit {
-
-        var path: String = getcwd()
-        var TmpDir = Path(path + "/DiskLruCacheTest")
-        let appVersion = 100
-        Directory.create(TmpDir) 
-        var cache = DiskLruCache.open(TmpDir, appVersion, 2, Int64(Int32.Max))
+  build() {
+    Column() {
+      Button('创建缓存-读取缓存').onClick(() => {
+        let cache = new DiskLruCache(this.directory, this.appVersion, this.valueCount, this.maxSize)
         let key = "k1"
-        let src = cache.edit(key).getOrThrow()
-        src.set(0, "ABC")
-        src.set(1, "DE")
-        let pc = src.getString(0).isEmpty()
-        src.commit()
-        println("success")
-        @Assert(true, pc)    
+        let editor = cache.edit(key)
+        editor.set(0, "OP")
+        editor.set(1, "LKll")
+        editor.commit()
+
+        let snapShot = cache.get("k1")
+        let str0 = snapShot.getString(0)
+        let str1 = snapShot.getString(1)
+        console.error("---------------> 测试缓存读取str0：" + str0)
+        console.error("---------------> 测试缓存读取str1：" + str1)
+      })
     }
+    .height('100%')
+    .width('100%')
+  }
 }
 ```
 
 执行结果如下：
 
 ```shell
-success
-```
-
-#### 从缓存中读取数据 功能示例
-
-```cangjie
-import disklrucache.*
-import std.fs.*
-import std.math.*
-import std.os.posix.*
-import std.unittest.*
-import std.unittest.testmacro.*
-
-main() {
-
-    let lrucache = LruCacheOpen1Test()
-    lrucache.open1Test()
-    return 0
-}
-
-@Test
-public class LruCacheOpen1Test {
-    @TestCase
-    public func open1Test(): Unit {
-
-        var path: String = getcwd()
-        var TmpDir = Path(path + "/DiskLruCacheTest37")
-        let appVersion = 100
-        Directory.create(TmpDir) 
-        var cache = DiskLruCache.open(TmpDir, appVersion, 2, Int64(Int32.Max))
-        let key = "k1"
-        let src = cache.edit(key).getOrThrow()
-        src.set(0, "OP")
-        src.set(1, "LKll")
-        src.commit()
-        let sc = cache.get("k1").getOrThrow().getString(0)
-        println("success")
-        @Assert("OP", sc)
-    }
-}
-```
-
-执行结果如下：
-
-```shell
-success
-```
-
-#### 缓存中删除指定key值的缓存文件 功能示例
-
-```cangjie
-import disklrucache.*
-import std.fs.*
-import std.math.*
-import std.os.posix.*
-import std.unittest.*
-import std.unittest.testmacro.*
-
-main() {
-
-    let lrucache = LruCacheOpen1Test()
-    lrucache.open1Test()
-    return 0
-}
-
-@Test
-public class LruCacheOpen1Test {
-    @TestCase
-    public func open1Test(): Unit {
-
-        var path: String = getcwd()
-        var TmpDir = Path(path + "/DiskLruCacheTest")
-        let appVersion = 100
-        Directory.create(TmpDir) 
-        var cache = DiskLruCache.open(TmpDir, appVersion, 2, Int64(Int32.Max))
-        let key = "k1"
-        let src = cache.edit(key).getOrThrow()
-        src.set(0, "ABC")
-        src.set(1, "DE")
-        src.getString(0).isEmpty()
-        src.commit()
-        let cq = cache.remove("k1")
-        println("success")
-        @Assert(true, cq)    
-    }
-}
-```
-
-执行结果如下：
-
-```shell
-success
-```
-
-#### 同步缓存文件的操作记录至journal和关闭缓存 功能示例
-
-```cangjie
-import disklrucache.*
-import std.fs.*
-import std.math.*
-import std.os.posix.*
-import std.unittest.*
-import std.unittest.testmacro.*
-
-main() {
-
-    let lrucache = LruCacheOpen1Test()
-    lrucache.open1Test()
-    return 0
-}
-
-@Test
-public class LruCacheOpen1Test {
-    @TestCase
-    public func open1Test(): Unit {
-
-        var path: String = getcwd()
-        var TmpDir = Path(path + "/DiskLruCacheTest")
-        let appVersion = 100
-        Directory.create(TmpDir)
-        var cache = DiskLruCache.open(TmpDir, appVersion, 2, Int64(Int32.Max))
-        cache.close()
-        cache.isClosed()
-        println("success")
-        @Assert(true, cache.isClosed())
-
-    }
-}
-```
-
-执行结果如下：
-
-```shell
-success
-```
-
-在下述版本验证通过：
-```shell
-Cangjie Version: 1.0.0
+E     ---------------> 测试缓存读取str0：OP
+E     ---------------> 测试缓存读取str1：LKll
 ```
 
 ## 开源协议
